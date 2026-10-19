@@ -1,0 +1,12 @@
+# 本机系统和编辑器配置
+.DS_Store
+.idea/
+.vscode/
+
+# 本地依赖、缓存和环境变量
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example

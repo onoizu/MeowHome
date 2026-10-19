@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Cat adoption listings, preference matching, care guides and adoption diaries."
+    />
+    <meta name="theme-color" content="#3d6755" />
+    <title>Cat care | MeowHome</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <!-- 样式与结构分离：base 是全站组件，pages 是页面专用布局。 -->
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- defer 保证 HTML 解析后按顺序执行，不使用框架或构建工具。 -->
+    <script src="js/data.js" defer></script>
+    <script src="js/store.js" defer></script>
+    <script src="js/translations.js" defer></script>
+    <script src="js/i18n.js" defer></script>
+    <script src="js/common.js" defer></script>
+    <script src="js/guides.js" defer></script>
+  </head>
+  <body>
+    <!-- 本文件职责：新手指南：文章列表、阅读弹窗与可保存进度的准备清单。 -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- 公共导航：每个 HTML 保留相同结构，可直接学习和编辑。 -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="MeowHome home"
+          ><span class="brand-name"
+            >MeowHome<span class="brand-dot">.</span></span
+          ></a
+        >
+        <nav class="desktop-nav" id="main-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="adoption-menu"
+            >
+              Adopt &amp; rehome
+            </button>
+            <div class="nav-dropdown-panel" id="adoption-menu" hidden>
+              <a href="discover.html">Find a cat</a
+              ><a href="rehome.html">Rehome a cat</a
+              ><a href="match.html">Find your match</a>
+            </div>
+          </div>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="care-menu"
+            >
+              Cat care
+            </button>
+            <div class="nav-dropdown-panel" id="care-menu" hidden>
+              <a href="guides.html">Beginner guides</a
+              ><a href="guides.html#checklist">Preparation checklist</a>
+            </div>
+          </div>
+          <a href="stories.html">Adoption diaries</a>
+          <a href="dashboard.html" id="profile-nav" hidden>Profile</a>
+        </nav>
+        <div class="header-actions">
+          <a class="account-link" id="account-link" href="login.html"
+            ><span>Sign in</span></a
+          >
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Website language"
+            data-no-translate
+          >
+            <button
+              type="button"
+              data-language="en"
+              lang="en"
+              aria-label="Switch to English"
+              aria-pressed="true"
+            >
+              EN</button
+            ><span aria-hidden="true">/</span
+            ><button
+              type="button"
+              data-language="zh-Hant"
+              lang="zh-Hant"
+              aria-label="切換至繁體中文"
+              aria-pressed="false"
+            >
+              繁體
+            </button>
+          </div>
+          <button
+            class="menu-toggle"
+            id="menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="main-nav"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="container">
+      <header class="page-head">
+        <h1>Cat care</h1>
+      </header>
+      <div class="guides-layout">
+        <section aria-label="Cat care articles">
+          <article class="guide-feature">
+            <img
+              src="assets/images/hero.jpg"
+              alt="A relaxed cat in a quiet home"
+            />
+            <div>
+              <h2>Adoption preparation</h2>
+              <p>Equipment, home safety and household responsibilities.</p>
+              <button class="text-link" type="button" data-article="prepare">
+                Read the guide <span data-icon="arrow"></span>
+              </button>
+            </div>
+          </article>
+          <div class="guide-grid" id="guide-grid"></div>
+          <p class="source-note">
+            Our short guides are educational introductions. For detailed advice,
+            consult
+            <a
+              href="https://www.spca.org.hk/zh-hant/adoption/which-pet-is-for-you/which-pet-is-for-you-cats/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >SPCA's cat adoption and care information</a
+            >
+            and your veterinary professional.
+          </p>
+        </section>
+        <aside class="checklist-panel" id="checklist">
+          <h2>Preparation checklist</h2>
+          <div class="progress-line">
+            <span id="checklist-count">0 of 7 ready</span>
+          </div>
+          <progress
+            id="checklist-progress"
+            max="7"
+            value="0"
+            aria-label="Preparation checklist progress"
+          ></progress>
+          <div class="checklist-items" id="checklist-items"></div>
+          <p class="source-note">
+            Progress is saved in this browser for your current profile.
+          </p>
+        </aside>
+      </div>
+    </main>
+    <dialog class="dialog" id="article-dialog">
+      <div class="dialog-inner">
+        <div class="dialog-head">
+          <div>
+            <h2 id="article-title"></h2>
+          </div>
+          <button
+            class="icon-button"
+            type="button"
+            data-close
+            aria-label="Close article"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <div class="article-content" id="article-content"></div>
+      </div>
+    </dialog>
+    <!-- 公共页脚：示例信息、页面导航与参考来源。 -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <div>
+            <a class="brand" href="index.html"
+              ><svg class="brand-icon" viewBox="0 0 44 48" aria-hidden="true">
+                <path
+                  d="M8 17 5 5l12 6c3-1 7-1 10 0L39 5l-3 12c5 10-3 23-14 26C11 40 3 27 8 17Z"
+                />
+                <path
+                  d="M15 23h1m12 0h1M20 28l2 2 2-2m-2 2v4m0 0-4 2m4-2 4 2M4 27l10 2M2 34l12-1m16-4 10-2m-10 6 12 1"
+                /></svg
+              ><span class="brand-name"
+                >MeowHome<span class="brand-dot">.</span></span
+              ></a
+            >
+          </div>
+          <div>
+            <h3>Adoption</h3>
+            <div class="footer-links">
+              <a href="discover.html">Find a cat</a
+              ><a href="match.html">Find your match</a
+              ><a href="rehome.html">Rehome a cat</a>
+            </div>
+          </div>
+          <div>
+            <h3>Resources</h3>
+            <div class="footer-links">
+              <a href="guides.html">Care guides</a
+              ><a href="stories.html">Adoption diaries</a
+              ><a href="dashboard.html">Profile</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2026 MeowHome</span>
+        </div>
+      </div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

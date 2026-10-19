@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Cat adoption listings, preference matching, care guides and adoption diaries."
+    />
+    <meta name="theme-color" content="#3d6755" />
+    <title>Profile | MeowHome</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <!-- 样式与结构分离：base 是全站组件，pages 是页面专用布局。 -->
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- defer 保证 HTML 解析后按顺序执行，不使用框架或构建工具。 -->
+    <script src="js/data.js" defer></script>
+    <script src="js/store.js" defer></script>
+    <script src="js/translations.js" defer></script>
+    <script src="js/i18n.js" defer></script>
+    <script src="js/common.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+  </head>
+  <body>
+    <!-- 本文件职责：个人中心：我的申请、发布、收藏、日记、资料及演示管理员审核。 -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- 公共导航：每个 HTML 保留相同结构，可直接学习和编辑。 -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="MeowHome home"
+          ><span class="brand-name"
+            >MeowHome<span class="brand-dot">.</span></span
+          ></a
+        >
+        <nav class="desktop-nav" id="main-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="adoption-menu"
+            >
+              Adopt &amp; rehome
+            </button>
+            <div class="nav-dropdown-panel" id="adoption-menu" hidden>
+              <a href="discover.html">Find a cat</a
+              ><a href="rehome.html">Rehome a cat</a
+              ><a href="match.html">Find your match</a>
+            </div>
+          </div>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="care-menu"
+            >
+              Cat care
+            </button>
+            <div class="nav-dropdown-panel" id="care-menu" hidden>
+              <a href="guides.html">Beginner guides</a
+              ><a href="guides.html#checklist">Preparation checklist</a>
+            </div>
+          </div>
+          <a href="stories.html">Adoption diaries</a>
+          <a href="dashboard.html" id="profile-nav" hidden>Profile</a>
+        </nav>
+        <div class="header-actions">
+          <a class="account-link" id="account-link" href="login.html"
+            ><span>Sign in</span></a
+          >
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Website language"
+            data-no-translate
+          >
+            <button
+              type="button"
+              data-language="en"
+              lang="en"
+              aria-label="Switch to English"
+              aria-pressed="true"
+            >
+              EN</button
+            ><span aria-hidden="true">/</span
+            ><button
+              type="button"
+              data-language="zh-Hant"
+              lang="zh-Hant"
+              aria-label="切換至繁體中文"
+              aria-pressed="false"
+            >
+              繁體
+            </button>
+          </div>
+          <button
+            class="menu-toggle"
+            id="menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="main-nav"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="container dashboard-page" aria-label="My dashboard">
+      <div class="dashboard-layout" id="dashboard-layout">
+        <aside class="dashboard-sidebar">
+          <div class="profile-mini" id="profile-mini"></div>
+          <nav class="dashboard-tabs" aria-label="Dashboard sections">
+            <button data-tab="applications" type="button">
+              <span data-icon="list"></span>My applications<span
+                class="count"
+                id="application-count"
+              ></span></button
+            ><button data-tab="listings" type="button">
+              <span data-icon="home"></span>My listings<span
+                class="count"
+                id="listing-count"
+              ></span></button
+            ><button data-tab="saved" type="button">
+              <span data-icon="heart"></span>Saved cats<span
+                class="count"
+                id="saved-count"
+              ></span></button
+            ><button data-tab="diaries" type="button">
+              <span data-icon="book"></span>My diaries</button
+            ><button data-tab="profile" type="button">
+              <span data-icon="user"></span>My profile</button
+            ><button
+              data-tab="moderation"
+              id="moderation-tab"
+              type="button"
+              hidden
+            >
+              <span data-icon="shield"></span>Moderation
+            </button>
+          </nav>
+          <div class="demo-switch">
+            Local demo profile<br /><a href="login.html?next=dashboard.html"
+              >Switch profile</a
+            >
+            ·
+            <button class="reset-link" id="sign-out" type="button">
+              Sign out
+            </button>
+          </div>
+        </aside>
+        <section
+          class="dashboard-content"
+          id="dashboard-content"
+          aria-live="polite"
+        ></section>
+      </div>
+      <p class="local-note">
+        Classroom prototype: changes stay in this browser. Profiles and role
+        checks demonstrate the interface only; no real authentication or
+        database is connected.
+      </p>
+    </main>
+    <dialog class="dialog" id="diary-dialog">
+      <div class="dialog-inner">
+        <div class="dialog-head">
+          <div>
+            <h2 id="diary-form-title">New diary entry</h2>
+          </div>
+          <button
+            class="icon-button"
+            type="button"
+            data-close
+            aria-label="Close diary editor"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <form id="diary-form">
+          <div class="field">
+            <label for="diary-cat">Your adopted cat *</label
+            ><select id="diary-cat" name="catId" required></select>
+          </div>
+          <div class="field">
+            <label for="diary-title">Title *</label
+            ><input id="diary-title" name="title" maxlength="90" required />
+          </div>
+          <div class="field">
+            <label for="diary-text">Diary content *</label
+            ><textarea
+              id="diary-text"
+              name="text"
+              minlength="15"
+              maxlength="2400"
+              required
+            ></textarea>
+          </div>
+          <div class="field">
+            <label for="diary-image">A photograph (optional)</label
+            ><input
+              id="diary-image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            /><img
+              id="diary-image-preview"
+              class="upload-preview"
+              alt="Diary image preview"
+              hidden
+            />
+          </div>
+          <label class="check-label"
+            ><input id="diary-public" type="checkbox" checked /><span
+              >Make this diary public.</span
+            ></label
+          >
+          <p class="form-error" id="diary-error" role="alert"></p>
+          <button class="btn full" id="save-diary" type="submit">
+            Save entry <span data-icon="arrow"></span>
+          </button>
+        </form>
+      </div>
+    </dialog>
+    <!-- 公共页脚：示例信息、页面导航与参考来源。 -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <div>
+            <a class="brand" href="index.html"
+              ><svg class="brand-icon" viewBox="0 0 44 48" aria-hidden="true">
+                <path
+                  d="M8 17 5 5l12 6c3-1 7-1 10 0L39 5l-3 12c5 10-3 23-14 26C11 40 3 27 8 17Z"
+                />
+                <path
+                  d="M15 23h1m12 0h1M20 28l2 2 2-2m-2 2v4m0 0-4 2m4-2 4 2M4 27l10 2M2 34l12-1m16-4 10-2m-10 6 12 1"
+                /></svg
+              ><span class="brand-name"
+                >MeowHome<span class="brand-dot">.</span></span
+              ></a
+            >
+          </div>
+          <div>
+            <h3>Adoption</h3>
+            <div class="footer-links">
+              <a href="discover.html">Find a cat</a
+              ><a href="match.html">Find your match</a
+              ><a href="rehome.html">Rehome a cat</a>
+            </div>
+          </div>
+          <div>
+            <h3>Resources</h3>
+            <div class="footer-links">
+              <a href="guides.html">Care guides</a
+              ><a href="stories.html">Adoption diaries</a
+              ><a href="dashboard.html">Profile</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2026 MeowHome</span>
+        </div>
+      </div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

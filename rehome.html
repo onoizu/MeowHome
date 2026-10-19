@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Cat adoption listings, preference matching, care guides and adoption diaries."
+    />
+    <meta name="theme-color" content="#3d6755" />
+    <title>Help a cat find home | MeowHome</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <!-- 样式与结构分离：base 是全站组件，pages 是页面专用布局。 -->
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- defer 保证 HTML 解析后按顺序执行，不使用框架或构建工具。 -->
+    <script src="js/data.js" defer></script>
+    <script src="js/store.js" defer></script>
+    <script src="js/translations.js" defer></script>
+    <script src="js/i18n.js" defer></script>
+    <script src="js/common.js" defer></script>
+    <script src="js/rehome.js" defer></script>
+  </head>
+  <body>
+    <!-- 本文件职责：送养发布与编辑：三步表单、图片预览、资料复核与本地提交。 -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- 公共导航：每个 HTML 保留相同结构，可直接学习和编辑。 -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="MeowHome home"
+          ><span class="brand-name"
+            >MeowHome<span class="brand-dot">.</span></span
+          ></a
+        >
+        <nav class="desktop-nav" id="main-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="adoption-menu"
+            >
+              Adopt &amp; rehome
+            </button>
+            <div class="nav-dropdown-panel" id="adoption-menu" hidden>
+              <a href="discover.html">Find a cat</a
+              ><a href="rehome.html">Rehome a cat</a
+              ><a href="match.html">Find your match</a>
+            </div>
+          </div>
+          <div class="nav-dropdown">
+            <button
+              class="nav-trigger"
+              type="button"
+              aria-expanded="false"
+              aria-controls="care-menu"
+            >
+              Cat care
+            </button>
+            <div class="nav-dropdown-panel" id="care-menu" hidden>
+              <a href="guides.html">Beginner guides</a
+              ><a href="guides.html#checklist">Preparation checklist</a>
+            </div>
+          </div>
+          <a href="stories.html">Adoption diaries</a>
+          <a href="dashboard.html" id="profile-nav" hidden>Profile</a>
+        </nav>
+        <div class="header-actions">
+          <a class="account-link" id="account-link" href="login.html"
+            ><span>Sign in</span></a
+          >
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Website language"
+            data-no-translate
+          >
+            <button
+              type="button"
+              data-language="en"
+              lang="en"
+              aria-label="Switch to English"
+              aria-pressed="true"
+            >
+              EN</button
+            ><span aria-hidden="true">/</span
+            ><button
+              type="button"
+              data-language="zh-Hant"
+              lang="zh-Hant"
+              aria-label="切換至繁體中文"
+              aria-pressed="false"
+            >
+              繁體
+            </button>
+          </div>
+          <button
+            class="menu-toggle"
+            id="menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="main-nav"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="container">
+      <header class="page-head">
+        <h1>Rehome a cat</h1>
+      </header>
+      <div class="form-layout">
+        <section>
+          <ol class="stepper" aria-label="Listing steps">
+            <li class="active" data-step-indicator="0">
+              <span>1</span>Basic information
+            </li>
+            <li data-step-indicator="1"><span>2</span>Care needs</li>
+            <li data-step-indicator="2"><span>3</span>Review</li>
+          </ol>
+          <form id="rehome-form" class="panel">
+            <div class="form-note" id="rehome-login-note" hidden>
+              Please
+              <a class="text-link" href="login.html?next=rehome.html"
+                >sign in</a
+              >
+              to publish. You can explore the form first.
+            </div>
+            <section class="form-step" data-form-step="0">
+              <h2>Basic information</h2>
+              <p>Fields marked * are required.</p>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="cat-name">Cat's name *</label
+                  ><input
+                    id="cat-name"
+                    name="name"
+                    required
+                    maxlength="30"
+                    placeholder="e.g. Milo"
+                  />
+                </div>
+                <div class="field">
+                  <label for="cat-breed">Breed *</label
+                  ><select id="cat-breed" name="breed" required data-breeds>
+                    <option value="">Choose a breed</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-months">Age in months *</label
+                  ><input
+                    id="cat-months"
+                    name="months"
+                    type="number"
+                    min="1"
+                    max="300"
+                    required
+                    placeholder="e.g. 18"
+                  />
+                </div>
+                <div class="field">
+                  <label for="cat-gender">Gender *</label
+                  ><select id="cat-gender" name="gender" required>
+                    <option value="">Please select</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-location">Location *</label
+                  ><select id="cat-location" name="location" required>
+                    <option value="">Choose an area</option>
+                    <option>Kowloon</option>
+                    <option>Hong Kong Island</option>
+                    <option>New Territories</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-health">Health notes *</label
+                  ><input
+                    id="cat-health"
+                    name="health"
+                    required
+                    maxlength="120"
+                    placeholder="e.g. Vaccinated, neutered"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">A photograph *</span
+                ><label class="upload-area" for="cat-image"
+                  ><span data-icon="upload"></span
+                  ><strong>Upload a photograph</strong
+                  ><span>JPG, PNG or WebP · Up to 5 MB</span
+                  ><input
+                    id="cat-image"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp" /><img
+                    id="cat-upload-preview"
+                    class="upload-preview"
+                    alt="Your selected cat photograph"
+                    hidden
+                /></label>
+                <p class="form-error" id="image-error" role="alert"></p>
+              </div>
+            </section>
+            <section class="form-step" data-form-step="1" hidden>
+              <h2>Personality and care</h2>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="cat-personality">Personality *</label
+                  ><select id="cat-personality" name="personality" required>
+                    <option>Gentle</option>
+                    <option>Playful</option>
+                    <option>Independent</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-energy">Energy level *</label
+                  ><select id="cat-energy" name="energy" required>
+                    <option value="calm">Calm</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-care">Coat care *</label
+                  ><select id="cat-care" name="care" required>
+                    <option value="easy">Simple routine</option>
+                    <option value="regular">Regular grooming</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-beginner"
+                    >Suitable for first-time adopters?</label
+                  ><select id="cat-beginner" name="beginner">
+                    <option value="true">Yes, with preparation</option>
+                    <option value="false">Experience preferred</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cat-pets">Comfortable with other pets?</label
+                  ><select id="cat-pets" name="otherPets">
+                    <option value="false">Only-pet home preferred</option>
+                    <option value="true">Yes, with introductions</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="cat-description">Description *</label
+                ><textarea
+                  id="cat-description"
+                  name="description"
+                  required
+                  minlength="30"
+                  maxlength="1500"
+                  placeholder="Temperament, routine and rehoming background…"
+                ></textarea>
+              </div>
+              <div class="field">
+                <label for="cat-requirements">Adoption requirements *</label
+                ><textarea
+                  id="cat-requirements"
+                  name="requirements"
+                  required
+                  minlength="15"
+                  maxlength="800"
+                  placeholder="Care needs, home environment, and anything an adopter should know…"
+                ></textarea>
+              </div>
+            </section>
+            <section class="form-step" data-form-step="2" hidden>
+              <h2>Review listing</h2>
+              <p>Check the details before sending your listing for review.</p>
+              <div id="listing-review"></div>
+              <label class="check-label"
+                ><input type="checkbox" id="listing-consent" required /><span
+                  >I confirm I am responsible for rehoming this cat, the
+                  information is accurate, and this is an adoption listing
+                  rather than a sale.</span
+                ></label
+              >
+              <p class="source-note">
+                New listings appear in your dashboard as “Pending review”. In
+                this demo, switch to the moderator profile to approve them.
+              </p>
+            </section>
+            <p class="form-error" id="rehome-error" role="alert"></p>
+            <div class="form-navigation">
+              <button
+                class="btn btn-outline"
+                id="rehome-back"
+                type="button"
+                hidden
+              >
+                Back</button
+              ><button class="btn" id="rehome-next" type="button">
+                Continue <span data-icon="arrow"></span></button
+              ><button class="btn" id="publish-listing" type="submit" hidden>
+                Submit for review <span data-icon="arrow"></span>
+              </button>
+            </div>
+          </form>
+        </section>
+        <aside class="form-aside">
+          <img
+            src="assets/images/luna.jpg"
+            alt="A cat waiting for the right home"
+          />
+          <h3>Listing tips</h3>
+          <ul>
+            <li>Use a recent, well-lit photograph.</li>
+            <li>Describe their individual personality.</li>
+            <li>Be open about their care needs.</li>
+            <li>Take time to get to know applicants.</li>
+          </ul>
+          <a class="text-link" href="guides.html"
+            >Read our preparation guide ↗</a
+          >
+        </aside>
+      </div>
+    </main>
+    <!-- 公共页脚：示例信息、页面导航与参考来源。 -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <div>
+            <a class="brand" href="index.html"
+              ><svg class="brand-icon" viewBox="0 0 44 48" aria-hidden="true">
+                <path
+                  d="M8 17 5 5l12 6c3-1 7-1 10 0L39 5l-3 12c5 10-3 23-14 26C11 40 3 27 8 17Z"
+                />
+                <path
+                  d="M15 23h1m12 0h1M20 28l2 2 2-2m-2 2v4m0 0-4 2m4-2 4 2M4 27l10 2M2 34l12-1m16-4 10-2m-10 6 12 1"
+                /></svg
+              ><span class="brand-name"
+                >MeowHome<span class="brand-dot">.</span></span
+              ></a
+            >
+          </div>
+          <div>
+            <h3>Adoption</h3>
+            <div class="footer-links">
+              <a href="discover.html">Find a cat</a
+              ><a href="match.html">Find your match</a
+              ><a href="rehome.html">Rehome a cat</a>
+            </div>
+          </div>
+          <div>
+            <h3>Resources</h3>
+            <div class="footer-links">
+              <a href="guides.html">Care guides</a
+              ><a href="stories.html">Adoption diaries</a
+              ><a href="dashboard.html">Profile</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2026 MeowHome</span>
+        </div>
+      </div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
