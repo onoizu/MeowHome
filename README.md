@@ -16,7 +16,8 @@ npm run db:init
 npm run dev
 ```
 
- Open **[http://127.0.0.1:3000/](http://127.0.0.1:3000/)**. `npm run dev` watches server files and restarts the backend when they change. Refresh the browser after editing client files. Use `npm start` to run without file watching, and press Ctrl+C to stop.
+ Open **[http://127.0.0.1:3000/](http://127.0.0.1:3000/)**. 
+ `npm run dev` watches server files and restarts the backend when they change. Refresh the browser after editing client files. Use `npm start` to run without file watching, and press Ctrl+C to stop.
 
 Always open the website through this server address. Opening an HTML file directly, or serving only `client/` with Live Server, will not connect the pages to the database.
 
@@ -162,12 +163,3 @@ The test creates a temporary SQLite database and real HTTP sessions, then remove
 
 Browser checks also cover the two-account adoption workflow, all nine pages at mobile width, language switching, available-only public listings, homepage interactions and reduced-motion layout. See [the verification notes](docs/testing.md) for reproducible steps and scope.
 
-## Current limits and handoff
-
-- No administrator approval, password reset, email verification, email sending or live chat is implemented. Listings are public as soon as their owner publishes them.
-- Guides are static. Matching is a local rule-based score, not an AI model or a guarantee of suitability.
-- Discovery search, filters, sorting and pagination run in SQLite; the browser requests only one page of results at a time. Other pages may still fetch the full catalog, and other users refresh to see updates. There is no real-time push.
-- Old uploaded files are not automatically removed when a listing image is replaced or a record is deleted.
-- `CREATE TABLE IF NOT EXISTS` initialises the schema but is not a schema-migration system. Back up existing data before changing table definitions.
-
-The [Word handoff document](docs/MeowHome_Implementation_Handoff.docx) explains the current implementation in Chinese for the other group member. The final `report.pdf` and signed `contribution-declaration.pdf` still need to be prepared from the group's actual work. Keep [ai-use.md](ai-use.md) accurate when making further changes, and consult [ASSETS.md](ASSETS.md) for sources and credits.
