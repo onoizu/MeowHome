@@ -1,4 +1,5 @@
-// index.js：本地启动入口。数据库和图片均保存在 source/database 下。
+// index.js：本地启动入口。
+// 数据库和图片均保存在 source/database 下
 const { createApp } = require("./app");
 const app = createApp();
 const host = process.env.HOST || "127.0.0.1";
