@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     sort = document.getElementById("sort");
   const keys = ["breed", "age", "gender", "location"];
   let page = 1,
-    timer;
+    timer,
+    requestId = 0;
   const size = 6;
   // 手机端收起筛选；桌面始终显示左侧栏，CSS sticky 保持滚动位置。
   const panel = document.getElementById("filter-panel");
@@ -53,56 +54,43 @@ document.addEventListener("DOMContentLoaded", async () => {
       `discover.html${query ? "?" + query : ""}`,
     );
   }
-  function render() {
-    const filter = Object.fromEntries(new FormData(form)),
-      query = search.value.trim().toLowerCase();
-    let cats = MeowStore.cats()
-      .filter((c) => c.status === "available")
-      .filter((c) => {
-        if (filter.breed && c.breed !== filter.breed) return false;
-        if (filter.gender && c.gender !== filter.gender) return false;
-        if (filter.location && c.location !== filter.location) return false;
-        if (filter.age === "kitten" && c.months >= 12) return false;
-        if (filter.age === "adult" && (c.months < 12 || c.months >= 84))
-          return false;
-        if (filter.age === "senior" && c.months < 84) return false;
-        return (
-          !query ||
-          [
-            c.name,
-            c.breed,
-            c.personality,
-            ...c.tags,
-            ...[c.breed, c.personality, ...c.tags].map(
-              (value) => MeowTranslations[value] || value,
-            ),
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(query)
-        );
-      });
-    cats.sort((a, b) =>
-      sort.value === "youngest"
-        ? a.months - b.months
-        : sort.value === "oldest"
-          ? b.months - a.months
-          : sort.value === "name"
-            ? a.name.localeCompare(b.name)
-            : b.created.localeCompare(a.created),
-    );
-    const pages = Math.max(1, Math.ceil(cats.length / size));
-    if (page > pages) {
-      page = pages;
+  async function render() {
+    const id = ++requestId;
+    const filter = Object.fromEntries(new FormData(form));
+    const rawQuery = search.value.trim();
+    const query =
+      Object.entries(MeowTranslations).find(
+        ([, translated]) =>
+          translated.trim().toLowerCase() === rawQuery.toLowerCase(),
+      )?.[0] || rawQuery;
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(size),
+      sort: sort.value,
+    });
+    keys.forEach((key) => {
+      if (filter[key]) params.set(key, filter[key]);
+    });
+    if (filter.age) params.set("age", filter.age);
+    if (query) params.set("q", query);
+    let result;
+    try {
+      result = await MeowStore.searchCats(params);
+    } catch (error) {
+      if (id === requestId) MeowUI.toast(error.message);
+      return false;
+    }
+    if (id !== requestId) return false;
+    const cats = result.items,
+      pages = result.pages;
+    if (page !== result.page) {
+      page = result.page;
       updateURL(true);
     }
     document.getElementById("result-count").textContent =
-      `${cats.length} cats found`;
+      `${result.total} cats found`;
     document.getElementById("cat-results").innerHTML =
-      cats
-        .slice((page - 1) * size, page * size)
-        .map((c) => MeowUI.catCard(c))
-        .join("") ||
+      cats.map((c) => MeowUI.catCard(c)).join("") ||
       MeowUI.empty(
         "No matching cats",
         "Try another combination or clear the filters.",
@@ -118,8 +106,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       .join("");
     // 即使筛选后只有一页，也显示页号；无结果时隐藏分页。
     const pagination = document.getElementById("pagination");
-    pagination.hidden = !cats.length;
-    pagination.innerHTML = cats.length
+    pagination.hidden = !result.total;
+    pagination.innerHTML = result.total
       ? `<button class="page-step" data-page="${page - 1}" type="button" ${page === 1 ? "disabled" : ""}>Previous</button>` +
         Array.from(
           { length: pages },
@@ -128,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ).join("") +
         `<button class="page-step" data-page="${page + 1}" type="button" ${page === pages ? "disabled" : ""}>Next</button><span class="pagination-summary">Page ${page} of ${pages}</span>`
       : "";
+    return true;
   }
   function change() {
     clearTimeout(timer);
@@ -155,13 +144,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       change();
     }
   });
-  document.getElementById("pagination").addEventListener("click", (e) => {
+  document.getElementById("pagination").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-page]");
     if (!b || b.disabled || Number(b.dataset.page) === page) return;
     clearTimeout(timer);
     page = Number(b.dataset.page);
     updateURL();
-    render();
+    if (!(await render())) return;
     document
       .querySelector('.page-number[aria-current="page"]')
       ?.focus({ preventScroll: true });

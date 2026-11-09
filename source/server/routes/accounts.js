@@ -1,11 +1,10 @@
 // accounts.js：注册、登录、退出、个人资料和有条件删除账号。
 const express = require("express");
-const { randomUUID } = require("node:crypto");
+const { createHash, randomUUID } = require("node:crypto");
 const V = require("../validation");
 const A = require("../auth");
 function accounts(db) {
   const router = express.Router();
-  const failures = new Map();
   router.get("/auth/me", (req, res) => res.json(req.user || null));
   router.post("/auth/register", (req, res) => {
     const name = V.text(req.body.name, "Name", 2, 60);
@@ -24,21 +23,27 @@ function accounts(db) {
     const email = V.email(req.body.email);
     const password = A.password(req.body.password);
     const now = Date.now();
-    for (const [key, entry] of failures)
-      if (entry.until < now) failures.delete(key);
-    const attempt = failures.get(req.ip) || {
-      count: 0,
-      until: now + 15 * 60 * 1000,
-    };
-    if (attempt.count >= 20)
+    const key = createHash("sha256").update(req.ip).digest("hex");
+    db.prepare("DELETE FROM login_failures WHERE resetAt <= ?").run(now);
+    const attempt = db
+      .prepare("SELECT count, resetAt FROM login_failures WHERE key=?")
+      .get(key);
+    if (attempt && attempt.count >= 20)
       V.fail("Too many sign-in attempts. Please try again later.", 429);
     const user = db.prepare("SELECT * FROM users WHERE email=?").get(email);
     if (!user || !A.checkPassword(password, user.passwordHash)) {
-      attempt.count++;
-      failures.set(req.ip, attempt);
+      if (attempt) {
+        db.prepare("UPDATE login_failures SET count=count+1 WHERE key=?").run(
+          key,
+        );
+      } else {
+        db.prepare(
+          "INSERT INTO login_failures(key,count,resetAt) VALUES(?,?,?)",
+        ).run(key, 1, now + 15 * 60 * 1000);
+      }
       V.fail("Email or password is incorrect.", 401);
     }
-    failures.delete(req.ip);
+    db.prepare("DELETE FROM login_failures WHERE key=?").run(key);
     A.createSession(db, req, res, user.id);
     res.json({ id: user.id, name: user.name, email: user.email });
   });
@@ -62,6 +67,22 @@ function accounts(db) {
       req.user.id,
     );
     res.json({ id: req.user.id, name, email });
+  });
+  router.patch("/profile/password", A.requireUser, (req, res) => {
+    const currentPassword = A.password(req.body.currentPassword);
+    const newPassword = A.password(req.body.newPassword);
+    if (currentPassword === newPassword)
+      V.fail("New password must be different from the current password.");
+    const user = db
+      .prepare("SELECT passwordHash FROM users WHERE id=?")
+      .get(req.user.id);
+    if (!A.checkPassword(currentPassword, user.passwordHash))
+      V.fail("Current password is incorrect.", 403);
+    db.prepare("UPDATE users SET passwordHash=? WHERE id=?").run(
+      A.hashPassword(newPassword),
+      req.user.id,
+    );
+    res.json({ ok: true });
   });
   router.delete("/profile", A.requireUser, (req, res) => {
     const user = db.prepare("SELECT * FROM users WHERE id=?").get(req.user.id);

@@ -34,9 +34,10 @@ window.MeowStore = (() => {
   }
   async function refresh() {
     const user = await request("/auth/me");
+    const isDiscoverPage = location.pathname.endsWith("/discover.html");
     const [cats, stories, applications, favourites, checklist] =
       await Promise.all([
-        request("/cats"),
+        isDiscoverPage ? state.cats : request("/cats"),
         request("/stories"),
         user ? request("/applications") : [],
         user ? request("/favourites") : [],
@@ -72,6 +73,12 @@ window.MeowStore = (() => {
     stories: () => state.stories,
     favourites: () => state.favourites,
     checklist: () => state.checklist,
+    async searchCats(filters) {
+      const query = new URLSearchParams(filters);
+      const result = await request("/cats?" + query.toString());
+      state = { ...state, cats: result.items };
+      return result;
+    },
     async register(name, email, password) {
       await request("/auth/register", "POST", { name, email, password });
     },
@@ -81,6 +88,8 @@ window.MeowStore = (() => {
     signOut: () => change("/auth/logout", "POST", {}),
     updateProfile: (name, email) =>
       change("/profile", "PATCH", { name, email }),
+    changePassword: (currentPassword, newPassword) =>
+      change("/profile/password", "PATCH", { currentPassword, newPassword }),
     deleteAccount: (password) => change("/profile", "DELETE", { password }),
     toggleFavourite(id) {
       return change(

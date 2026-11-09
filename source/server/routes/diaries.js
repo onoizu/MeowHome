@@ -3,7 +3,7 @@ const express = require("express");
 const { randomUUID } = require("node:crypto");
 const { requireUser } = require("../auth");
 const V = require("../validation");
-const { saveImage } = require("../images");
+const { saveImage, deleteUnusedImage } = require("../images");
 function diaries(db, uploads) {
   const router = express.Router();
   router.get("/", (req, res) => {
@@ -38,7 +38,7 @@ function diaries(db, uploads) {
     ).run(id, req.user.id, ...Object.values(d));
     res.status(201).json({ id });
   });
-  router.put("/:id", requireUser, (req, res) => {
+  router.put("/:id", requireUser, async (req, res) => {
     const existing = db
       .prepare("SELECT * FROM diaries WHERE id=?")
       .get(req.params.id);
@@ -49,16 +49,19 @@ function diaries(db, uploads) {
     db.prepare(
       "UPDATE diaries SET catId=?,title=?,text=?,image=?,public=? WHERE id=?",
     ).run(...Object.values(d), existing.id);
+    if (d.image !== existing.image)
+      await deleteUnusedImage(db, existing.image, uploads);
     res.json({ ok: true });
   });
-  router.delete("/:id", requireUser, (req, res) => {
+  router.delete("/:id", requireUser, async (req, res) => {
     const story = db
-      .prepare("SELECT userId FROM diaries WHERE id=?")
+      .prepare("SELECT userId,image FROM diaries WHERE id=?")
       .get(req.params.id);
     if (!story) V.fail("Diary not found.", 404);
     if (story.userId !== req.user.id)
       V.fail("Only the author can delete this diary.", 403);
     db.prepare("DELETE FROM diaries WHERE id=?").run(req.params.id);
+    await deleteUnusedImage(db, story.image, uploads);
     res.json({ ok: true });
   });
   return router;

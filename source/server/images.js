@@ -28,4 +28,24 @@ function saveImage(value, uploads, allowedPaths = []) {
   fs.writeFileSync(path.join(uploads, filename), data, { flag: "wx" });
   return "/uploads/" + filename;
 }
-module.exports = { saveImage };
+async function deleteUnusedImage(db, image, uploads) {
+  const match =
+    /^\/uploads\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png|webp))$/i.exec(
+      image,
+    );
+  if (!match) return;
+  const referenced = db
+    .prepare(
+      "SELECT 1 FROM cats WHERE image=? UNION ALL SELECT 1 FROM diaries WHERE image=? LIMIT 1",
+    )
+    .get(image, image);
+  if (referenced) return;
+  const filename = path.join(uploads, match[1]);
+  try {
+    await fs.promises.unlink(filename);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    console.error(`Could not remove unused uploaded image ${filename}:`, error);
+  }
+}
+module.exports = { saveImage, deleteUnusedImage };

@@ -50,11 +50,15 @@ test("MeowHome complete adoption flow", async (t) => {
   const owner = client(),
     adopter = client(),
     other = client(),
-    guest = client();
-  let ownerId, adopterId, catId, appId, otherApp, storyId;
+    guest = client(),
+    rateLimitClient = client();
+  let ownerId, adopterId, catId, appId, otherApp, storyId, updatedDiaryImage;
   const password = "StudyCats2026!";
+  const updatedPassword = "NewStudyCats2026!";
   const photograph =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==";
+  const uploadedFile = (image) =>
+    path.join(options.uploads, path.basename(image));
   const cat = {
     name: "Test Cat",
     breed: "Domestic Shorthair",
@@ -131,12 +135,45 @@ test("MeowHome complete adoption flow", async (t) => {
     );
     assert.equal(
       (
-        await guest("/auth/login", "POST", {
+        await rateLimitClient("/auth/login", "POST", {
           email: "owner@example.test",
           password: "wrongpass",
         })
       ).status,
       401,
+    );
+    const failureKey = app.locals.db
+      .prepare("SELECT key FROM login_failures")
+      .get().key;
+    app.locals.db
+      .prepare("UPDATE login_failures SET count=20 WHERE key=?")
+      .run(failureKey);
+    assert.equal(
+      (
+        await rateLimitClient("/auth/login", "POST", {
+          email: "owner@example.test",
+          password,
+        })
+      ).status,
+      429,
+    );
+    app.locals.db
+      .prepare("UPDATE login_failures SET resetAt=? WHERE key=?")
+      .run(Date.now() - 1, failureKey);
+    assert.equal(
+      (
+        await rateLimitClient("/auth/login", "POST", {
+          email: "owner@example.test",
+          password,
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      app.locals.db
+        .prepare("SELECT key FROM login_failures WHERE key=?")
+        .get(failureKey),
+      undefined,
     );
     assert.equal((await owner("/auth/me")).data.id, ownerId);
     assert.equal(
@@ -182,12 +219,51 @@ test("MeowHome complete adoption flow", async (t) => {
           await owner("/cats/" + catId, "PUT", {
             ...cat,
             name: "New Name",
-            image: stored.image,
+            image: photograph,
           })
         ).status,
         200,
       );
-      assert.equal((await guest("/cats/" + catId)).data.name, "New Name");
+      const updatedCat = (await guest("/cats/" + catId)).data;
+      assert.equal(updatedCat.name, "New Name");
+      assert.notEqual(updatedCat.image, stored.image);
+      assert.equal(fs.existsSync(uploadedFile(stored.image)), false);
+      assert.equal(fs.existsSync(uploadedFile(updatedCat.image)), true);
+      const anotherCat = await owner("/cats", "POST", {
+        ...cat,
+        name: "Another Cat",
+      });
+      assert.equal(anotherCat.status, 201);
+      const firstPage = await guest("/cats?page=1&limit=1&sort=name");
+      const secondPage = await guest("/cats?page=2&limit=1&sort=name");
+      assert.deepEqual(
+        {
+          total: firstPage.data.total,
+          page: firstPage.data.page,
+          pageSize: firstPage.data.pageSize,
+          pages: firstPage.data.pages,
+          items: firstPage.data.items.map((row) => row.name),
+        },
+        {
+          total: 2,
+          page: 1,
+          pageSize: 1,
+          pages: 2,
+          items: ["Another Cat"],
+        },
+      );
+      assert.deepEqual(
+        secondPage.data.items.map((row) => row.name),
+        ["New Name"],
+      );
+      const filtered = await guest(
+        "/cats?page=1&limit=6&q=another&breed=Domestic%20Shorthair&age=adult&gender=Female&location=Kowloon",
+      );
+      assert.equal(filtered.data.total, 1);
+      assert.equal(filtered.data.items[0].id, anotherCat.data.id);
+      assert.equal((await guest("/cats?page=0")).status, 400);
+      assert.equal((await guest("/cats?limit=51")).status, 400);
+      assert.equal((await owner("/cats/" + anotherCat.data.id, "DELETE", {})).status, 200);
       assert.equal(
         (
           await owner("/stories", "POST", {
@@ -247,6 +323,19 @@ test("MeowHome complete adoption flow", async (t) => {
     ).data.id;
     assert.equal((await owner("/applications")).data.length, 2);
     assert.equal((await adopter("/applications")).data[0].rehomerEmail, null);
+    assert.equal(
+      (
+        await owner("/applications/" + appId + "/status", "PATCH", {
+          status: "contacting",
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      (await adopter("/applications")).data.find((a) => a.id === appId)
+        .rehomerEmail,
+      "owner@example.test",
+    );
   });
   await t.test("atomic acceptance, cancellation and handover", async () => {
     assert.equal(
@@ -347,7 +436,7 @@ test("MeowHome complete adoption flow", async (t) => {
     );
   });
   await t.test("diary CRUD and private visibility", async () => {
-    const image = (await guest("/cats/" + catId)).data.image;
+    const image = photograph;
     const diary = {
       catId,
       title: "First week",
@@ -358,6 +447,8 @@ test("MeowHome complete adoption flow", async (t) => {
     const a = await adopter("/stories", "POST", diary);
     assert.equal(a.status, 201);
     storyId = a.data.id;
+    const originalDiaryImage = (await adopter("/stories")).data[0].image;
+    assert.equal(fs.existsSync(uploadedFile(originalDiaryImage)), true);
     assert.equal((await adopter("/stories")).data.length, 1);
     assert.deepEqual((await owner("/stories")).data, []);
     assert.deepEqual((await guest("/stories")).data, []);
@@ -366,10 +457,20 @@ test("MeowHome complete adoption flow", async (t) => {
       403,
     );
     assert.equal(
-      (await adopter("/stories/" + storyId, "PUT", { ...diary, public: true }))
+      (await adopter("/stories/" + storyId, "PUT", {
+        ...diary,
+        image: photograph,
+        public: true,
+      }))
         .status,
       200,
     );
+    updatedDiaryImage = (await adopter("/stories")).data[0].image;
+    assert.notEqual(updatedDiaryImage, originalDiaryImage);
+    assert.equal(fs.existsSync(uploadedFile(originalDiaryImage)), false);
+    assert.equal(fs.existsSync(uploadedFile(updatedDiaryImage)), true);
+    const catImage = (await guest("/cats/" + catId)).data.image;
+    assert.equal(fs.existsSync(uploadedFile(catImage)), true);
     assert.equal((await guest("/stories")).data.length, 1);
   });
   await t.test(
@@ -380,6 +481,69 @@ test("MeowHome complete adoption flow", async (t) => {
           await adopter("/profile", "PATCH", {
             name: "Updated Adopter",
             email: "updated@example.test",
+          })
+        ).status,
+        200,
+      );
+      assert.equal(
+        (
+          await guest("/profile/password", "PATCH", {
+            currentPassword: password,
+            newPassword: updatedPassword,
+          })
+        ).status,
+        401,
+      );
+      assert.equal(
+        (
+          await adopter("/profile/password", "PATCH", {
+            currentPassword: "wrong-password",
+            newPassword: updatedPassword,
+          })
+        ).status,
+        403,
+      );
+      assert.equal(
+        (
+          await adopter("/profile/password", "PATCH", {
+            currentPassword: password,
+            newPassword: "short",
+          })
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await adopter("/profile/password", "PATCH", {
+            currentPassword: password,
+            newPassword: password,
+          })
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await adopter("/profile/password", "PATCH", {
+            currentPassword: password,
+            newPassword: updatedPassword,
+          })
+        ).status,
+        200,
+      );
+      assert.equal(
+        (
+          await client()("/auth/login", "POST", {
+            email: "updated@example.test",
+            password,
+          })
+        ).status,
+        401,
+      );
+      assert.equal(
+        (
+          await client()("/auth/login", "POST", {
+            email: "updated@example.test",
+            password: updatedPassword,
           })
         ).status,
         200,
@@ -405,7 +569,8 @@ test("MeowHome complete adoption flow", async (t) => {
       });
       assert.equal(csrf.status, 403);
       assert.equal(
-        (await adopter("/profile", "DELETE", { password })).status,
+        (await adopter("/profile", "DELETE", { password: updatedPassword }))
+          .status,
         409,
       );
       const sql = await guest("/auth/login", "POST", {
@@ -439,6 +604,9 @@ test("MeowHome complete adoption flow", async (t) => {
         (await adopter("/stories/" + storyId, "DELETE", {})).status,
         200,
       );
+      assert.equal(fs.existsSync(uploadedFile(updatedDiaryImage)), false);
+      const catImage = (await guest("/cats/" + catId)).data.image;
+      assert.equal(fs.existsSync(uploadedFile(catImage)), true);
       assert.deepEqual((await guest("/stories")).data, []);
       assert.equal((await adopter("/auth/logout", "POST", {})).status, 200);
       assert.equal((await adopter("/applications")).status, 401);
@@ -446,7 +614,7 @@ test("MeowHome complete adoption flow", async (t) => {
         (
           await adopter("/auth/login", "POST", {
             email: "updated@example.test",
-            password,
+            password: updatedPassword,
           })
         ).status,
         200,
@@ -457,6 +625,7 @@ test("MeowHome complete adoption flow", async (t) => {
     "withdraw/delete application and delete unused listing",
     async () => {
       const newCat = (await owner("/cats", "POST", cat)).data.id;
+      const newCatImage = (await guest("/cats/" + newCat)).data.image;
       const newApp = (
         await adopter("/applications", "POST", { ...details, catId: newCat })
       ).data.id;
@@ -475,6 +644,7 @@ test("MeowHome complete adoption flow", async (t) => {
       );
       assert.equal((await owner("/cats/" + newCat, "DELETE", {})).status, 200);
       assert.equal((await guest("/cats/" + newCat)).status, 404);
+      assert.equal(fs.existsSync(uploadedFile(newCatImage)), false);
       assert.deepEqual(
         app.locals.db.prepare("PRAGMA foreign_key_check").all(),
         [],

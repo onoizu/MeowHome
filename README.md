@@ -16,7 +16,7 @@ npm run db:init
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000/**. `npm run dev` watches server files and restarts the backend when they change. Refresh the browser after editing client files. Use `npm start` to run without file watching, and press Ctrl+C to stop.
+ Open **[http://127.0.0.1:3000/](http://127.0.0.1:3000/)**. `npm run dev` watches server files and restarts the backend when they change. Refresh the browser after editing client files. Use `npm start` to run without file watching, and press Ctrl+C to stop.
 
 Always open the website through this server address. Opening an HTML file directly, or serving only `client/` with Live Server, will not connect the pages to the database.
 
@@ -166,7 +166,7 @@ Browser checks also cover the two-account adoption workflow, all nine pages at m
 
 - No administrator approval, password reset, email verification, email sending or live chat is implemented. Listings are public as soon as their owner publishes them.
 - Guides are static. Matching is a local rule-based score, not an AI model or a guarantee of suitability.
-- Search, sorting and pagination run in the browser after fetching listings. State refreshes on page load and after changes; other users refresh to see updates. There is no real-time push.
+- Discovery search, filters, sorting and pagination run in SQLite; the browser requests only one page of results at a time. Other pages may still fetch the full catalog, and other users refresh to see updates. There is no real-time push.
 - Old uploaded files are not automatically removed when a listing image is replaced or a record is deleted.
 - `CREATE TABLE IF NOT EXISTS` initialises the schema but is not a schema-migration system. Back up existing data before changing table definitions.
 

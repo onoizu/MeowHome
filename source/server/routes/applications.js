@@ -21,7 +21,7 @@ function applications(db) {
   router.get("/", (req, res) => {
     const rows = db
       .prepare(
-        `SELECT a.*,CASE WHEN a.status IN ('accepted','completed') THEN u.email ELSE NULL END AS rehomerEmail
+        `SELECT a.*,CASE WHEN a.status IN ('contacting','accepted','completed') THEN u.email ELSE NULL END AS rehomerEmail
       FROM applications a JOIN cats c ON a.catId=c.id JOIN users u ON c.ownerId=u.id
       WHERE a.userId=? OR c.ownerId=? ORDER BY a.created DESC,a.id`,
       )

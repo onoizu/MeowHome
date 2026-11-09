@@ -177,11 +177,75 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="field"><label for="edit-name">Display name</label><input id="edit-name" name="name" value="${esc(user.name)}" required minlength="2" maxlength="60"></div>
         <div class="field"><label for="edit-email">Email address</label><input id="edit-email" name="email" value="${esc(user.email)}" required type="email" maxlength="254"></div>
         <button class="btn btn-small" type="submit">Save profile</button>
+      </form>
+      <form id="change-password-form">
+        <h3>Change password</h3>
+        <div class="field"><label for="current-password">Current password</label><input id="current-password" name="currentPassword" type="password" required minlength="8" maxlength="128" autocomplete="current-password"></div>
+        <div class="field"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></div>
+        <button class="btn btn-small" type="submit">Update password</button>
       </form><div class="form-navigation"><button class="btn btn-outline btn-small" type="button" data-logout>Sign out</button></div>
       <details><summary>Delete account</summary><p>Remove your listings, applications and diaries first. Accounts linked to completed adoptions must be kept.</p>
         <form id="delete-account-form"><div class="field"><label for="delete-password">Confirm password</label><input id="delete-password" name="password" type="password" required autocomplete="current-password"></div>
         <button class="btn btn-danger btn-small" type="submit">Delete account</button></form>
       </details></div>`;
+  }
+  function showAccountDeletionBlockers() {
+    const cats = MeowStore.cats().filter(
+      (cat) => cat.ownerId === user.id || cat.adopterId === user.id,
+    );
+    const applications = myApps();
+    const diaries = MeowStore.stories().filter(
+      (story) => story.userId === user.id,
+    );
+    const sections = [
+      {
+        title: "Cat records",
+        tab: "listings",
+        records: cats.map((cat) => {
+          const role = cat.ownerId === user.id ? "Rehomer" : "Adopter";
+          return `${esc(cat.name)} · ${role} · ${esc(U.status(cat.status))}`;
+        }),
+      },
+      {
+        title: "Applications",
+        tab: "applications",
+        records: applications.map((application) => {
+          const cat = MeowStore.cat(application.catId);
+          return `${esc(cat?.name || "Cat listing")} · ${esc(U.status(application.status))}`;
+        }),
+      },
+      {
+        title: "Diaries",
+        tab: "diaries",
+        records: diaries.map(
+          (story) => `${esc(story.title)} · ${esc(story.created.slice(0, 10))}`,
+        ),
+      },
+    ];
+    const hasRecords = cats.length + applications.length + diaries.length > 0;
+    document.getElementById("account-deletion-blockers")?.remove();
+    const dialog = document.createElement("dialog");
+    dialog.id = "account-deletion-blockers";
+    dialog.className = "dialog";
+    dialog.setAttribute("aria-labelledby", "account-deletion-title");
+    dialog.innerHTML = `<div class="dialog-inner">
+      <h2 id="account-deletion-title">Your account still has records</h2>
+      <p>These records must be resolved before the account can be deleted. Completed adoption history must be kept.</p>
+      ${
+        hasRecords
+          ? sections
+              .filter((section) => section.records.length)
+              .map(
+                (section) =>
+                  `<section><h3>${section.title} (${section.records.length})</h3><ul>${section.records.map((record) => `<li>${record}</li>`).join("")}</ul><a class="text-link" href="dashboard.html?tab=${section.tab}">Manage ${section.title.toLowerCase()} ↗</a></section>`,
+              )
+              .join("")
+          : '<p role="status">No blocking records are currently loaded. Your account data may have changed; refresh the page and try again.</p><a class="text-link" href="dashboard.html?tab=profile">Refresh profile ↗</a>'
+      }
+      <div class="button-row"><button class="btn btn-outline btn-small" type="button" data-close>Close</button></div>
+    </div>`;
+    document.body.append(dialog);
+    dialog.showModal();
   }
   function setTab(value, push = true) {
     if (!allowed.includes(value)) return;
@@ -287,6 +351,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         button.disabled = false;
       }
     }
+    if (e.target.id === "change-password-form") {
+      button.disabled = true;
+      const ok = await MeowStore.changePassword(
+        e.target.elements.currentPassword.value,
+        e.target.elements.newPassword.value,
+      );
+      if (ok) {
+        e.target.reset();
+        U.toast("Password changed.");
+      } else {
+        U.toast(MeowStore.error());
+        button.disabled = false;
+      }
+    }
     if (
       e.target.id === "delete-account-form" &&
       MeowI18n.confirm("Delete your account permanently?")
@@ -295,7 +373,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (await MeowStore.deleteAccount(e.target.elements.password.value))
         location.href = "index.html";
       else {
-        U.toast(MeowStore.error());
+        if (MeowStore.error().startsWith("Remove your listings, applications and diaries before deleting this account.")) {
+          showAccountDeletionBlockers();
+        } else {
+          U.toast(MeowStore.error());
+        }
         button.disabled = false;
       }
     }
