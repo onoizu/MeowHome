@@ -71,7 +71,7 @@ function cats(db, uploads) {
     if (Object.keys(req.query).length === 0) {
       const rows = db
         .prepare(
-          "SELECT c.*,u.name AS ownerName FROM cats c JOIN users u ON c.ownerId=u.id ORDER BY c.created DESC,c.id",
+          "SELECT c.*,u.name AS ownerName,u.avatar AS ownerAvatar FROM cats c JOIN users u ON c.ownerId=u.id ORDER BY c.created DESC,c.id",
         )
         .all();
       return res.json(rows.map(catRow));
@@ -118,7 +118,7 @@ function cats(db, uploads) {
     }[options.sort];
     const rows = db
       .prepare(
-        `SELECT c.*,u.name AS ownerName FROM cats c
+        `SELECT c.*,u.name AS ownerName,u.avatar AS ownerAvatar FROM cats c
          JOIN users u ON c.ownerId=u.id WHERE ${where}
          ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
       )
@@ -134,7 +134,7 @@ function cats(db, uploads) {
   router.get("/:id", (req, res) => {
     const cat = db
       .prepare(
-        "SELECT c.*,u.name AS ownerName FROM cats c JOIN users u ON c.ownerId=u.id WHERE c.id=?",
+        "SELECT c.*,u.name AS ownerName,u.avatar AS ownerAvatar FROM cats c JOIN users u ON c.ownerId=u.id WHERE c.id=?",
       )
       .get(req.params.id);
     if (!cat) fail("Cat listing not found.", 404);

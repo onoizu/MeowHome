@@ -46,6 +46,13 @@ window.MeowUI = (() => {
       ? value
       : "assets/images/hero.jpg";
   }
+  function avatar(userId, image) {
+    // 注册时生成的随机 UUID 让每个账号获得稳定的默认颜色。
+    let color = 0;
+    for (const character of userId) color = (color * 31 + character.charCodeAt(0)) % 4;
+    const src = image ? safeImage(image) : "assets/images/default-avatar.svg";
+    return `<span class="avatar avatar-color-${color}"><img src="${src}" alt=""></span>`;
+  }
   function age(cat) {
     if (cat.months < 12) return `${cat.months} months`;
     const n = Math.floor(cat.months / 12);
@@ -300,6 +307,7 @@ window.MeowUI = (() => {
     icon,
     escapeHTML,
     safeImage,
+    avatar,
     age,
     status,
     badge,

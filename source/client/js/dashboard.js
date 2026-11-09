@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const U = MeowUI,
     esc = U.escapeHTML;
   if (!U.requireUser()) return;
-  const user = MeowStore.user(),
-    content = document.getElementById("dashboard-content");
+  let user = MeowStore.user();
+  const content = document.getElementById("dashboard-content");
   const allowed = ["applications", "listings", "saved", "diaries", "profile"];
   const defaultTab = "applications";
   let tab = new URLSearchParams(location.search).get("tab") || defaultTab;
@@ -13,8 +13,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   let editStoryId = null,
     diaryImage = "",
     reading = false;
-  document.getElementById("profile-mini").innerHTML =
-    `<div class="avatar"><img src="assets/images/default-avatar.svg" alt="Default profile picture"></div><strong data-no-translate>${esc(user.name)}</strong>`;
   const owned = () => MeowStore.cats().filter((c) => c.ownerId === user.id);
   const adopted = () =>
     MeowStore.cats().filter(
@@ -29,6 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `<button class="btn btn-outline btn-small ${extra}" type="button" data-app-action="${status}" data-app="${esc(id)}">${label}</button>`;
   }
   function render() {
+    document.getElementById("profile-mini").innerHTML =
+      `${U.avatar(user.id, user.avatar)}<strong data-no-translate>${esc(user.name)}</strong>`;
     document.querySelectorAll("[data-tab]").forEach((b) => {
       b.classList.toggle("active", b.dataset.tab === tab);
       if (b.dataset.tab === tab) b.setAttribute("aria-current", "page");
@@ -173,11 +173,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderProfile() {
     content.innerHTML =
       toolbar("My profile") +
-      `<div class="panel dashboard-profile"><form id="profile-edit-form">
+      `<div class="panel dashboard-profile"><form id="profile-edit-form"><fieldset class="profile-fields">
+        <div class="field">
+          <span class="field-label" id="profile-avatar-label">Profile picture</span>
+          <div class="profile-avatar-editor" role="group" aria-labelledby="profile-avatar-label">
+            <div class="profile-avatar-preview" id="profile-avatar-preview">${U.avatar(user.id, user.avatar)}</div>
+            <div class="profile-avatar-actions">
+              <button class="btn btn-small" type="button" id="upload-avatar">${U.icon("upload")}<span>Upload avatar</span></button>
+              <button class="btn btn-outline btn-small" type="button" id="reset-avatar">Restore default</button>
+            </div>
+            <input id="edit-avatar" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          </div>
+        </div>
         <div class="field"><label for="edit-name">Display name</label><input id="edit-name" name="name" value="${esc(user.name)}" required minlength="2" maxlength="60"></div>
         <div class="field"><label for="edit-email">Email address</label><input id="edit-email" name="email" value="${esc(user.email)}" required type="email" maxlength="254"></div>
         <button class="btn btn-small" type="submit">Save profile</button>
-      </form>
+      </fieldset></form>
       <form id="change-password-form">
         <h3>Change password</h3>
         <div class="field"><label for="current-password">Current password</label><input id="current-password" name="currentPassword" type="password" required minlength="8" maxlength="128" autocomplete="current-password"></div>
@@ -188,6 +199,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         <form id="delete-account-form"><div class="field"><label for="delete-password">Confirm password</label><input id="delete-password" name="password" type="password" required autocomplete="current-password"></div>
         <button class="btn btn-danger btn-small" type="submit">Delete account</button></form>
       </details></div>`;
+    const form = document.getElementById("profile-edit-form");
+    const fields = form.querySelector("fieldset");
+    const upload = document.getElementById("edit-avatar");
+    const preview = document.getElementById("profile-avatar-preview");
+    let avatar;
+    document.getElementById("upload-avatar").addEventListener("click", () => {
+      upload.click();
+    });
+    upload.addEventListener("change", async () => {
+      if (!upload.files[0]) return;
+      fields.disabled = true;
+      try {
+        avatar = await U.readImage(upload.files[0]);
+        preview.innerHTML = U.avatar(user.id, avatar);
+      } catch (error) {
+        upload.value = "";
+        U.toast(error.message);
+      } finally {
+        fields.disabled = false;
+      }
+    });
+    document.getElementById("reset-avatar").addEventListener("click", () => {
+      avatar = null;
+      upload.value = "";
+      preview.innerHTML = U.avatar(user.id, null);
+    });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (fields.disabled) return;
+      fields.disabled = true;
+      const ok = await MeowStore.updateProfile(
+        form.elements.name.value.trim(),
+        form.elements.email.value.trim(),
+        avatar,
+      );
+      if (ok) {
+        user = MeowStore.user();
+        render();
+        U.toast("Profile saved.");
+      } else {
+        fields.disabled = false;
+        U.toast(MeowStore.error());
+      }
+    });
   }
   function showAccountDeletionBlockers() {
     const cats = MeowStore.cats().filter(
@@ -339,18 +394,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   content.addEventListener("submit", async (e) => {
     e.preventDefault();
     const button = e.target.querySelector("[type=submit]");
-    if (e.target.id === "profile-edit-form") {
-      button.disabled = true;
-      const ok = await MeowStore.updateProfile(
-        e.target.elements.name.value.trim(),
-        e.target.elements.email.value.trim(),
-      );
-      if (ok) location.reload();
-      else {
-        U.toast(MeowStore.error());
-        button.disabled = false;
-      }
-    }
     if (e.target.id === "change-password-form") {
       button.disabled = true;
       const ok = await MeowStore.changePassword(

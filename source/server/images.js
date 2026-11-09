@@ -36,9 +36,9 @@ async function deleteUnusedImage(db, image, uploads) {
   if (!match) return;
   const referenced = db
     .prepare(
-      "SELECT 1 FROM cats WHERE image=? UNION ALL SELECT 1 FROM diaries WHERE image=? LIMIT 1",
+      "SELECT 1 FROM cats WHERE image=? UNION ALL SELECT 1 FROM diaries WHERE image=? UNION ALL SELECT 1 FROM users WHERE avatar=? LIMIT 1",
     )
-    .get(image, image);
+    .get(image, image, image);
   if (referenced) return;
   const filename = path.join(uploads, match[1]);
   try {

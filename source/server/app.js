@@ -57,7 +57,7 @@ function createApp(options = {}) {
     },
     loadUser(db),
   );
-  app.use("/api", require("./routes/accounts")(db));
+  app.use("/api", require("./routes/accounts")(db, uploads));
   app.use("/api/cats", require("./routes/cats")(db, uploads));
   app.use("/api/applications", require("./routes/applications")(db));
   app.use("/api/stories", require("./routes/diaries")(db, uploads));

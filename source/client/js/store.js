@@ -86,8 +86,8 @@ window.MeowStore = (() => {
       await request("/auth/login", "POST", { email, password });
     },
     signOut: () => change("/auth/logout", "POST", {}),
-    updateProfile: (name, email) =>
-      change("/profile", "PATCH", { name, email }),
+    updateProfile: (name, email, avatar) =>
+      change("/profile", "PATCH", { name, email, avatar }),
     changePassword: (currentPassword, newPassword) =>
       change("/profile/password", "PATCH", { currentPassword, newPassword }),
     deleteAccount: (password) => change("/profile", "DELETE", { password }),

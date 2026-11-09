@@ -48,7 +48,7 @@ function loadUser(db) {
     req.user = token
       ? db
           .prepare(
-            `SELECT u.id,u.name,u.email FROM sessions s JOIN users u ON u.id=s.userId WHERE s.tokenHash=? AND s.expires>?`,
+            `SELECT u.id,u.name,u.email,u.avatar FROM sessions s JOIN users u ON u.id=s.userId WHERE s.tokenHash=? AND s.expires>?`,
           )
           .get(sessionHash(token), Date.now())
       : null;

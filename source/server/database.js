@@ -12,6 +12,11 @@ function openDatabase(filename) {
   db.exec(
     fs.readFileSync(path.join(__dirname, "../database/schema.sql"), "utf8"),
   );
+  transaction(db, () => {
+    const columns = db.prepare("PRAGMA table_info(users)").all();
+    if (!columns.some((column) => column.name === "avatar"))
+      db.exec("ALTER TABLE users ADD COLUMN avatar TEXT");
+  });
   db.exec(
     fs.readFileSync(path.join(__dirname, "../database/seed.sql"), "utf8"),
   );

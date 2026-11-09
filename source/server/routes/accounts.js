@@ -1,9 +1,11 @@
 // accounts.js：注册、登录、退出、个人资料和有条件删除账号。
 const express = require("express");
 const { createHash, randomUUID } = require("node:crypto");
+const { transaction } = require("../database");
+const { saveImage, deleteUnusedImage } = require("../images");
 const V = require("../validation");
 const A = require("../auth");
-function accounts(db) {
+function accounts(db, uploads) {
   const router = express.Router();
   router.get("/auth/me", (req, res) => res.json(req.user || null));
   router.post("/auth/register", (req, res) => {
@@ -17,7 +19,7 @@ function accounts(db) {
       "INSERT INTO users(id,name,email,passwordHash) VALUES(?,?,?,?)",
     ).run(id, name, email, A.hashPassword(password));
     A.createSession(db, req, res, id);
-    res.status(201).json({ id, name, email });
+    res.status(201).json({ id, name, email, avatar: null });
   });
   router.post("/auth/login", (req, res) => {
     const email = V.email(req.body.email);
@@ -45,7 +47,7 @@ function accounts(db) {
     }
     db.prepare("DELETE FROM login_failures WHERE key=?").run(key);
     A.createSession(db, req, res, user.id);
-    res.json({ id: user.id, name: user.name, email: user.email });
+    res.json({ id: user.id, name: user.name, email: user.email, avatar: user.avatar });
   });
   router.post("/auth/logout", (req, res) => {
     db.prepare("DELETE FROM sessions WHERE tokenHash=?").run(
@@ -54,19 +56,34 @@ function accounts(db) {
     res.clearCookie(A.cookieName, { path: "/" });
     res.json({ ok: true });
   });
-  router.patch("/profile", A.requireUser, (req, res) => {
+  router.patch("/profile", A.requireUser, async (req, res) => {
     const name = V.text(req.body.name, "Name", 2, 60);
     const email = V.email(req.body.email);
-    const other = db
-      .prepare("SELECT id FROM users WHERE email=? AND id<>?")
-      .get(email, req.user.id);
-    if (other) V.fail("This email is already registered.", 409);
-    db.prepare("UPDATE users SET name=?,email=? WHERE id=?").run(
-      name,
-      email,
-      req.user.id,
-    );
-    res.json({ id: req.user.id, name, email });
+    const { id } = req.user;
+    const requestedAvatar = req.body.avatar;
+    let oldAvatar, avatar, uploadedAvatar;
+    try {
+      transaction(db, () => {
+        const other = db
+          .prepare("SELECT id FROM users WHERE email=? AND id<>?")
+          .get(email, id);
+        if (other) V.fail("This email is already registered.", 409);
+        oldAvatar = db.prepare("SELECT avatar FROM users WHERE id=?").get(id).avatar;
+        avatar = oldAvatar;
+        if (requestedAvatar === null) avatar = null;
+        else if (requestedAvatar !== undefined) {
+          uploadedAvatar = saveImage(requestedAvatar, uploads);
+          avatar = uploadedAvatar;
+        }
+        db.prepare("UPDATE users SET name=?,email=?,avatar=? WHERE id=?")
+          .run(name, email, avatar, id);
+      });
+    } catch (error) {
+      if (uploadedAvatar) await deleteUnusedImage(db, uploadedAvatar, uploads);
+      throw error;
+    }
+    if (oldAvatar !== avatar) await deleteUnusedImage(db, oldAvatar, uploads);
+    res.json({ id, name, email, avatar });
   });
   router.patch("/profile/password", A.requireUser, (req, res) => {
     const currentPassword = A.password(req.body.currentPassword);
@@ -84,7 +101,7 @@ function accounts(db) {
     );
     res.json({ ok: true });
   });
-  router.delete("/profile", A.requireUser, (req, res) => {
+  router.delete("/profile", A.requireUser, async (req, res) => {
     const user = db.prepare("SELECT * FROM users WHERE id=?").get(req.user.id);
     if (!A.checkPassword(A.password(req.body.password), user.passwordHash))
       V.fail("Password is incorrect.", 403);
@@ -102,6 +119,7 @@ function accounts(db) {
         409,
       );
     db.prepare("DELETE FROM users WHERE id=?").run(user.id);
+    await deleteUnusedImage(db, user.avatar, uploads);
     res.clearCookie(A.cookieName, { path: "/" });
     res.json({ ok: true });
   });

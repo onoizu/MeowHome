@@ -449,6 +449,10 @@ window.MeowTranslations = {
   "The listing could not be saved. Please try a smaller photograph.":
     "未能儲存發布，請嘗試使用較小的照片。",
   "Display name": "顯示名稱",
+  "Profile picture": "個人頭像",
+  "Upload avatar": "上傳頭像",
+  "Restore default": "恢復預設",
+  "Profile saved.": "個人資料已儲存。",
   "Save profile": "儲存個人資料",
   "Change password": "修改密碼",
   "Current password": "目前密碼",
