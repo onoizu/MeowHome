@@ -1,4 +1,6 @@
 // diaries.js：公开日记和作者自己的私密日记；只有完成领养的人可以写对应猫咪的日记。
+
+
 const express = require("express");
 const { randomUUID } = require("node:crypto");
 const { requireUser } = require("../auth");
