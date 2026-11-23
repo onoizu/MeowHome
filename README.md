@@ -21,6 +21,8 @@ npm run dev
 
 Always open the website through this server address. Opening an HTML file directly, or serving only `client/` with Live Server, will not connect the pages to the database.
 
+
+
 ### Configuration and data
 
 No API key or separate database service is required. Defaults are:
