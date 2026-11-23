@@ -1,7 +1,10 @@
 // database.js：打开 SQLite、建表和事务。业务查询放在各 routes 文件中。
+
 const { DatabaseSync } = require("node:sqlite");
 const fs = require("node:fs");
 const path = require("node:path");
+
+
 
 function openDatabase(filename) {
   fs.mkdirSync(path.dirname(filename), { recursive: true });
@@ -22,6 +25,8 @@ function openDatabase(filename) {
   );
   return db;
 }
+
+
 
 function transaction(db, work) {
   db.exec("BEGIN IMMEDIATE");
