@@ -1,6 +1,6 @@
 # MeowHome
 
-MeowHome is a peer-to-peer cat adoption and rehoming web application. One account can publish cat listings, apply to adopt other users' cats, and share diaries after an adoption is completed. Accounts, listings, applications, diaries, favourites and preparation checklists are stored in SQLite.
+MeowHome is a peer-to-peer(P2P) cat adoption and rehoming web application. One account can publish cat listings, apply to adopt other users' cats, and share diaries after an adoption is completed. Accounts, listings, applications, diaries, favourites and preparation checklists are stored in SQLite.
 
 The interface uses separate HTML, CSS and vanilla JavaScript files, with English and Traditional Chinese support. A small Express server serves both the pages and the JSON API. There is no frontend framework, build step or ORM.
 
