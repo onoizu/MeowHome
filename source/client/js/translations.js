@@ -1,5 +1,6 @@
 /* translations.js：英文與繁體中文介面文案；自由輸入的內容不作自動翻譯。 */
 window.MeowTranslations = {
+  "Please agree to share your application with the rehomer.": "請同意與送養者分享申請資料。",
   Home: "首頁",
   "Adopt & rehome": "領養與送養",
   "Find a cat": "尋找貓咪",
@@ -449,6 +450,7 @@ window.MeowTranslations = {
   "The listing could not be saved. Please try a smaller photograph.":
     "未能儲存發布，請嘗試使用較小的照片。",
   "Display name": "顯示名稱",
+  Nickname: "暱稱",
   "Profile picture": "個人頭像",
   "Upload avatar": "上傳頭像",
   "Restore default": "恢復預設",

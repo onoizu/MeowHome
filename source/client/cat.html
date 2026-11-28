@@ -137,7 +137,7 @@
         <div class="cat-grid" id="related-cats"></div>
       </section>
     </main>
-    <!-- 原生 dialog：领养申请表单，数据仅保存在当前浏览器。 -->
+    <!-- 原生 dialog：领养申请表单，通过 API 提交给送养者。 -->
     <dialog class="dialog" id="application-dialog">
       <div class="dialog-inner">
         <div class="dialog-head">
@@ -164,6 +164,7 @@
               ><input
                 id="app-name"
                 name="name"
+                minlength="2"
                 required
                 maxlength="60"
                 autocomplete="name"
@@ -176,7 +177,7 @@
                 name="email"
                 type="email"
                 required
-                maxlength="100"
+                maxlength="254"
                 autocomplete="email"
               />
             </div>
@@ -197,7 +198,7 @@
             ><textarea
               id="app-home"
               name="home"
-              maxlength="600"
+              maxlength="1000"
               placeholder="Who you live with, time spent away from home, and arrangements for cat care…"
             ></textarea>
           </div>
@@ -206,12 +207,12 @@
             ><textarea
               id="app-reason"
               name="reason"
-              maxlength="1200"
+              maxlength="1500"
               placeholder="Your routine, expectations and plans for caring for this cat…"
             ></textarea>
           </div>
           <label class="check-label"
-            ><input type="checkbox" required /><span
+            ><input type="checkbox" name="consent" required /><span
               >I understand adoption is a long-term commitment and agree to
               share this application with the rehomer.</span
             ></label

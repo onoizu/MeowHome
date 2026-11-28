@@ -185,15 +185,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             <input id="edit-avatar" type="file" accept="image/jpeg,image/png,image/webp" hidden>
           </div>
         </div>
-        <div class="field"><label for="edit-name">Display name</label><input id="edit-name" name="name" value="${esc(user.name)}" required minlength="2" maxlength="60"></div>
+        <div class="field"><label for="edit-name">Nickname</label><input id="edit-name" name="name" value="${esc(user.name)}" required minlength="2" maxlength="60" autocomplete="nickname"></div>
         <div class="field"><label for="edit-email">Email address</label><input id="edit-email" name="email" value="${esc(user.email)}" required type="email" maxlength="254"></div>
-        <button class="btn btn-small" type="submit">Save profile</button>
+        <div class="profile-form-actions"><button class="btn btn-small" type="submit">Save profile</button></div>
       </fieldset></form>
-      <form id="change-password-form">
+      <form id="change-password-form" class="profile-password-form">
         <h3>Change password</h3>
         <div class="field"><label for="current-password">Current password</label><input id="current-password" name="currentPassword" type="password" required minlength="8" maxlength="128" autocomplete="current-password"></div>
         <div class="field"><label for="new-password">New password</label><input id="new-password" name="newPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></div>
-        <button class="btn btn-small" type="submit">Update password</button>
+        <div class="profile-form-actions"><button class="btn btn-small" type="submit">Update password</button></div>
       </form><div class="form-navigation"><button class="btn btn-outline btn-small" type="button" data-logout>Sign out</button></div>
       <details><summary>Delete account</summary><p>Remove your listings, applications and diaries first. Accounts linked to completed adoptions must be kept.</p>
         <form id="delete-account-form"><div class="field"><label for="delete-password">Confirm password</label><input id="delete-password" name="password" type="password" required autocomplete="current-password"></div>

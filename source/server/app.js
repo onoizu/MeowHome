@@ -18,6 +18,8 @@ function createApp(options = {}) {
   fs.mkdirSync(uploads, { recursive: true });
   const db = openDatabase(filename);
   const app = express();
+  const publicOrigin = process.env.PUBLIC_ORIGIN ? new URL(process.env.PUBLIC_ORIGIN).origin : null;
+  app.locals.publicOrigin = publicOrigin;
   app.disable("x-powered-by");
   app.locals.db = db;
   app.use((req, res, next) => {
@@ -35,7 +37,7 @@ function createApp(options = {}) {
       if (req.get("X-Requested-With") !== "MeowHome")
         return res.status(403).json({ error: "Invalid request source." });
       const origin = req.get("Origin");
-      if (origin && origin !== `${req.protocol}://${req.get("host")}`)
+      if (origin && origin !== (publicOrigin || `${req.protocol}://${req.get("host")}`))
         return res.status(403).json({ error: "Invalid request origin." });
       if (!req.is("application/json"))
         return res.status(415).json({ error: "Please send JSON data." });
@@ -65,10 +67,20 @@ function createApp(options = {}) {
   app.use("/api", (req, res) =>
     res.status(404).json({ error: "API endpoint not found." }),
   );
-  app.use(
-    "/uploads",
-    express.static(uploads, { dotfiles: "deny", index: false }),
-  );
+  app.get("/uploads/:filename", loadUser(db), (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+    const filename = req.params.filename;
+    if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/.test(filename)) return res.sendStatus(404);
+    const image = "/uploads/" + filename;
+    const visible = db.prepare(`
+      SELECT 1 FROM cats WHERE image = ?
+      UNION ALL SELECT 1 FROM users WHERE avatar = ?
+      UNION ALL SELECT 1 FROM diaries WHERE image = ? AND (public = 1 OR userId = ?)
+      LIMIT 1
+    `).get(image, image, image, req.user?.id || "");
+    if (!visible) return res.sendStatus(404);
+    res.sendFile(filename, { root: uploads, cacheControl: false });
+  });
   app.use(express.static(path.join(source, "client")));
   app.use((error, req, res, next) => {
     let status = error.status || 500;

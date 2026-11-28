@@ -20,9 +20,6 @@ function openDatabase(filename) {
     if (!columns.some((column) => column.name === "avatar"))
       db.exec("ALTER TABLE users ADD COLUMN avatar TEXT");
   });
-  db.exec(
-    fs.readFileSync(path.join(__dirname, "../database/seed.sql"), "utf8"),
-  );
   return db;
 }
 

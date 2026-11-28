@@ -780,6 +780,15 @@ progress::-webkit-progress-value {
 .dashboard-profile {
   max-width: 620px;
 }
+.profile-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.profile-password-form {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
 .dashboard-content .story-grid {
   grid-template-columns: 1fr 1fr;
 }

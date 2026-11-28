@@ -1,168 +1,67 @@
 # MeowHome
 
-MeowHome is a peer-to-peer(P2P) cat adoption and rehoming web application. One account can publish cat listings, apply to adopt other users' cats, and share diaries after an adoption is completed. Accounts, listings, applications, diaries, favourites and preparation checklists are stored in SQLite.
-
-The interface uses separate HTML, CSS and vanilla JavaScript files, with English and Traditional Chinese support. A small Express server serves both the pages and the JSON API. There is no frontend framework, build step or ORM.
+MeowHome connects cat owners and prospective adopters. One account can publish a cat, apply for another user's cat, track applications and keep an adoption diary. The interface supports English and Traditional Chinese.
 
 ## Run locally
 
-Install **Node.js 22.13.0 or later** and npm. The current implementation was verified with Node.js 25.5.0.
-
-```sh
-git clone https://github.com/onoizu/MeowHome.git
-cd MeowHome/source
-npm ci
-npm run db:init
-npm run dev
-```
-
- Open **[http://127.0.0.1:3000/](http://127.0.0.1:3000/)**. 
- `npm run dev` watches server files and restarts the backend when they change. Refresh the browser after editing client files. Use `npm start` to run without file watching, and press Ctrl+C to stop.
-
-Always open the website through this server address. Opening an HTML file directly, or serving only `client/` with Live Server, will not connect the pages to the database.
-
-
-
-### Configuration and data
-
-No API key or separate database service is required. Defaults are:
-
-```text
-HOST=127.0.0.1
-PORT=3000
-DATABASE_FILE=database/meowhome.sqlite
-UPLOAD_DIRECTORY=database/uploads
-```
-
-To override them, copy `.env.example` to `.env` inside `source/` and edit the values. Relative database and upload paths are resolved from `source/`.
-
-- `db:init` creates missing tables without clearing existing data. Server startup also initialises the schema.
-- A fresh database contains **no accounts, cats or diaries**. Register an account and publish a listing to get started. `seed.sql` intentionally inserts no sample business records.
-- Database files, uploaded images, `.env` and `node_modules/` are ignored by Git. Existing records on another member's computer are not included when cloning this repository.
-- Ten real cat photographs are included in `client/assets/sample-cats/`. Select them in the image upload field when publishing a cat or writing a diary. They do not create listings automatically. See the [photo credits](source/client/assets/sample-cats/SOURCES.md).
-- Restarting the server preserves existing data. To transfer an existing local dataset separately, stop the server first and keep the SQLite database and its uploads directory together.
-
-## Implemented features
-
-- **Accounts:** registration, password login, logout, profile editing and conditional account deletion. The same user can be both an adopter and a rehomer.
-- **Discovery:** search, detailed breed filters, age, gender and location filters, sorting and six listings per page. Filters and page selection are reflected in the URL.
-- **Cat listings:** photographs, care information, adoption requirements and a three-step publish form with preview. Owners can edit available listings and delete them when no active applications remain.
-- **Applications:** submit, edit, withdraw, review, accept, cancel acceptance and confirm handover. Applicant and rehomer dashboards show the relevant records and actions.
-- **Adoption diaries:** completed adopters can create, edit and delete entries linked to their cats, with public or private visibility.
-- **Supporting tools:** database-backed favourites and a preparation checklist, static beginner care guides, and a five-question matching quiz with explained rule-based results.
-- **Interface:** English/Traditional Chinese switching, responsive navigation with dropdowns, a personal dashboard, and homepage scroll reveals, image movement and an interactive adoption-process section.
-
-
-## Try a complete adoption
-
-1. Register account A. Open **Rehome a cat**, fill in the cat's information, upload a JPG/PNG/WebP photograph, preview and publish. The listing becomes available immediately.
-2. In a different browser or a private window, register account B. Find A's cat and submit an application. Contact name, email, experience and the form's consent checkbox are required. Home description and adoption plans are optional. B can edit a pending application or withdraw it.
-3. A opens **My listings**, reviews the incoming application and accepts B. The cat is reserved and disappears from public home/discovery/matching results. B can see A's contact email for arranging the handover.
-4. After the handover, A selects **Confirm handover**. B's application becomes completed, the cat becomes adopted, and the other pending/contacting applications for this cat are closed together.
-5. B opens **My diaries** and writes an update. A private entry is returned only to its author; a public entry also appears on the adoption diaries page.
-6. Refresh both sessions or restart the server to check that the records persist. Each session reads the same database; accounts do not share favourites or checklist selections.
-
-There is no automatic email delivery or chat. Users communicate through the email addresses provided in the application workflow.
-
-## Adoption and permission rules
-
-Cat status follows `available → reserved → adopted`. Applications use `pending`, `contacting`, `accepted`, `completed`, `rejected`, `withdrawn` and `closed`.
-
-- Submitting an application keeps the cat available. Only accepting an application reserves it. A rehomer can accept directly from pending or after marking the application as contacting.
-- Before handover, the applicant can withdraw an accepted application, or the rehomer can cancel acceptance. The cat becomes available again and the other applications are retained.
-- A user cannot apply for their own cat or hold duplicate active applications for the same cat. A cat can have at most one accepted/completed application.
-- Only the rehomer can confirm handover. Completed adoption records are retained; completed applications cannot be edited, withdrawn or deleted.
-- Applications are returned only to their applicant and the cat's owner. Server-side checks enforce ownership even if someone bypasses the interface.
-- Diaries can be created only by the cat's completed adopter, and only their author can edit or delete them. The linked cat cannot be changed when editing.
-- Cat editing is limited to available listings. Deletion requires no active applications; reserved/adopted listings and accounts linked to completed adoption history are retained.
-- Home/discovery/matching pages show only available cats. Saved links and personal records can still open reserved/adopted details. The public cat API returns these statuses too; removing a listing from discovery is not a privacy control.
-
-## Project structure
-
-```text
-MeowHome/
-├── README.md
-├── ASSETS.md                         Image credits and design references
-├── ai-use.md                         AI assistance and student review record
-├── docs/
-│   ├── MeowHome_Implementation_Handoff.docx
-│   ├── api.md                        Endpoint details (Chinese)
-│   ├── testing.md                    Test evidence and manual checks (Chinese)
-│   └── sample-listings.md            Notes about the original local dataset
-└── source/
-    ├── package.json
-    ├── package-lock.json
-    ├── .env.example
-    ├── client/
-    │   ├── *.html                    Nine page entry points
-    │   ├── css/                      Shared and page-specific styles
-    │   ├── js/                       Shared utilities and page scripts
-    │   └── assets/                   Static photos, SVGs and photo credits
-    ├── server/
-    │   ├── index.js                  Server startup and shutdown
-    │   ├── app.js                    Middleware, static files, routes and errors
-    │   ├── database.js               SQLite connection and transactions
-    │   ├── auth.js                   Password hashing, sessions and login checks
-    │   ├── validation.js             Server input validation
-    │   ├── images.js                 Image validation and file storage
-    │   └── routes/
-    │       ├── accounts.js           Authentication and profile operations
-    │       ├── cats.js               Cat listing CRUD
-    │       ├── applications.js       Applications and adoption transitions
-    │       ├── diaries.js            Diary CRUD and visibility
-    │       └── preferences.js        Favourites and checklist
-    ├── database/
-    │   ├── schema.sql               Tables, foreign keys and unique indexes
-    │   ├── seed.sql                 Empty initial business dataset
-    │   ├── init.js                  Database initialisation command
-    │   ├── meowhome.sqlite          Runtime file, not committed
-    │   └── uploads/                 Runtime images, not committed
-    └── tests/
-        └── api.test.js              HTTP integration tests with temporary data
-```
-
-### Client files
-
-The nine pages are `index.html` (home), `discover.html` (search), `cat.html` (details/application), `rehome.html` (publish/edit), `dashboard.html` (personal records), `stories.html` (public diaries), `login.html` (login/register), `match.html` (quiz) and `guides.html` (care/checklist).
-
-- `css/base.css`: shared typography, navigation, forms, buttons and cards.
-- `css/home.css`: homepage sections, transitions, image movement and responsive layout.
-- `css/discover.css`: sticky left filter panel, results grid and pagination.
-- `css/pages.css`: detail, dashboard, publish, login, quiz and guide layouts.
-- `js/data.js`: fixed breed options, quiz questions and checklist text; no business records.
-- `js/store.js`: Fetch requests and the current page's in-memory data. Page scripts wait for `MeowStore.ready`; successful writes reload server state.
-- `js/common.js`: shared navigation, cards, dialogs, image compression and notifications.
-- `js/translations.js` and `js/i18n.js`: interface translations. Only the language preference is saved in localStorage. User-written content is not translated automatically.
-- The remaining scripts are named after their page and handle its interactions.
-
-### Data and request flow
-
-The four core entities are `users`, `cats`, `applications` and `diaries`. A user owns many cats and submits many applications; each application refers to one cat. A completed cat records its adopter, and its diaries refer to both that cat and their author. `sessions`, `favourites` and `checklist` are supporting tables.
-
-Page action → `store.js` Fetch request → Express route → input/permission checks → parameterised SQLite queries → JSON response → reload state and render. Multi-record adoption changes run inside one transaction. Foreign keys and partial unique indexes protect the relationships and prevent conflicting acceptances.
-
-Passwords use salted Node.js `scrypt` hashes. Sessions are stored in SQLite, with a hashed token in the database and an HttpOnly, SameSite cookie in the browser. Mutations require JSON, a custom request header and an allowed request origin. Uploaded images are compressed in the browser, then checked again on the server for type, signature and a 5 MB file limit; the database stores the image path.
-
-Main API groups are `/api/auth/*`, `/api/profile`, `/api/cats`, `/api/applications`, `/api/stories`, `/api/favourites` and `/api/checklist`. Full methods, payloads and error responses are in [the API notes](docs/api.md).
-
-## Verification
+Install Node.js 22.13 or later and npm. From the project root, run:
 
 ```sh
 cd source
-npm test
+npm ci
+npm run db:seed
+npm start
 ```
 
-The test creates a temporary SQLite database and real HTTP sessions, then removes the temporary data. It does not insert accounts into the everyday database. On 2 November 2026, all **nine subtests passed** (Node reports ten tests including the enclosing flow), covering:
+Open [MeowHome on localhost](http://127.0.0.1:3000/). The server serves both the pages and the API. For development, `npm run dev` restarts the server when server files change.
 
-- Registration, login, password hashing and session cookies.
-- Publishing/editing, image validation and ownership.
-- Application creation/editing, privacy and duplicate prevention.
-- Competing acceptance, cancellation and handover consistency.
-- Diary CRUD, public/private visibility and author access.
-- Profiles, favourites, checklist and request-source checks.
-- Persistence across restart and session revocation after logout.
-- Withdrawing/deleting applications and deleting unused listings.
-- Optional home/adoption-plan fields, including omission, short text, clearing and length limits.
+On an empty database, `db:seed` creates the tables and loads two accounts, seven available cats and one completed adoption with a public diary. If accounts already exist, the command preserves them and skips the sample records. To start with an empty site, use `npm run db:init` instead of `db:seed`.
 
-Browser checks also cover the two-account adoption workflow, all nine pages at mobile width, language switching, available-only public listings, homepage interactions and reduced-motion layout. See [the verification notes](docs/testing.md) for reproducible steps and scope.
+## Test accounts
 
+| Account | Email | Password |
+| --- | --- | --- |
+| Alex, owner of the listed cats | rehomer@example.test | MeowHome2026! |
+| Sam, adopter of Honey | adopter@example.test | MeowHome2026! |
+
+These credentials are for a local demonstration database. Use separate browser sessions for Alex and Sam, such as a regular window and a private window.
+
+## Try an adoption
+
+1. As Sam, open **Find a cat**, filter the listings and open Mochi. Submit an application and confirm permission to share it with the rehomer. Sam can edit or withdraw it under **My applications**.
+2. As Alex, open **My listings**, review Mochi's applications and accept Sam's request. Refresh discovery in Sam's window. Mochi is now reserved and disappears from discovery.
+3. As Alex, confirm the handover. Mochi becomes adopted, Sam's application is completed and other outstanding requests for Mochi close in the same transaction.
+4. As Sam, open **My diaries** and write about Mochi. A private entry appears in Sam's dashboard. Making it public adds it to **Adoption diaries**. Honey's existing entry provides a completed example.
+5. To try publishing, choose **Rehome a cat**, enter the cat's details and upload a JPG, PNG or WebP image. Sample photographs are included in `source/client/assets/sample-cats/`. Refresh the site or restart the server to check that the listing remains available.
+
+Users can also register, change their nickname, upload or reset their avatar, change their password, save favourites, take a five-question matching quiz and track their care preparation checklist.
+
+## Code and storage
+
+| Location | Responsibility |
+| --- | --- |
+| `source/client/` | Nine HTML pages, CSS, JavaScript and static assets. Page scripts use `js/store.js` for API calls. |
+| `source/server/` | Express app, session authentication, input validation and routes for each feature. |
+| `source/database/schema.sql` | SQLite tables, foreign keys and unique indexes. |
+| `source/database/seed.sql` | Sample records loaded by the optional seed command. |
+| `source/tests/api.test.js` | HTTP integration tests using a temporary database and upload directory. |
+
+The four core tables are `users`, `cats`, `applications` and `diaries`. SQLite stores form data and image paths. Uploaded image files live in the uploads directory. The server checks ownership before updating records. Photos uploaded exclusively for private diaries are accessible only to their authors. A listing photo reused in a diary also remains visible on its original listing.
+
+Local defaults are listed below. To override them, copy `source/.env.example` to `source/.env`. Relative paths are resolved from `source/`.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| HOST | 127.0.0.1 | Listening address |
+| PORT | 3000 | HTTP port |
+| DATABASE_FILE | database/meowhome.sqlite | SQLite database file |
+| UPLOAD_DIRECTORY | database/uploads | Uploaded cat photos, avatars and diary images |
+| PUBLIC_ORIGIN | unset | External origin when using an HTTPS reverse proxy, e.g. `https://meowhome.example.org` |
+
+A new checkout creates its own database. To move an existing installation, stop the server and copy the database directory, including uploads. Keep the database and images on persistent storage. MeowHome runs as a single server instance. Updates from another session appear on refresh. Users arrange handover using the contact details in the application workflow.
+
+## Tests and references
+
+From `source/`, run `npm test`. Tests cover registration, listing CRUD, search and pagination, consent and optional fields, duplicate applications, competing acceptances, handover, diary visibility and image access, avatars, password changes, favourites, checklists and persistence across server restarts.
+
+[API reference](docs/api.md) · [Test cases](docs/testing.md) · [Photo and asset credits](ASSETS.md)

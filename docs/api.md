@@ -6,11 +6,11 @@
 
 ## 账号
 
-- `GET /api/auth/me`：返回当前用户 `{id,name,email}`，访客返回 `null`。不会返回密码哈希。
+- `GET /api/auth/me`：返回当前用户 `{id,name,email,avatar}`，访客返回 `null`。不会返回密码哈希。
 - `POST /api/auth/register`：输入 `{name,email,password}`，注册并登录，返回用户资料。姓名 2-60 字符、有效电邮、密码 8-128 字符；电邮忽略大小写且唯一。
 - `POST /api/auth/login`：输入 `{email,password}`，返回资料并设置 cookie。每个 IP 在 15 分钟窗口内失败 20 次后会被限流，返回 429；计数保存在 SQLite，成功登录后清除。
 - `POST /api/auth/logout`：输入 `{}`，删除当前 Session，返回 `{ok:true}`。
-- `PATCH /api/profile`：登录用户输入 `{name,email}` 修改自己的资料，返回更新的用户。
+- `PATCH /api/profile`：登录用户输入 `{name,email,avatar?}` 修改自己的资料。省略 avatar 保留原图，传入图片 data URL 更新头像，传入 null 恢复默认头像，返回更新的用户。
 - `PATCH /api/profile/password`：登录用户输入 `{currentPassword,newPassword}` 修改密码。新密码须为 8-128 字符，当前密码必须正确；新旧密码不能相同。成功返回 `{ok:true}`，不会注销当前 Session。
 - `DELETE /api/profile`：输入 `{password}`。密码正确且没有核心关联记录才允许删除，返回 `{ok:true}`。
 
@@ -27,7 +27,7 @@
 ## 申请
 
 - `GET /api/applications`：只返回自己提交的申请及自己猫咪收到的申请。申请状态进入 contacting、accepted 或 completed 后，申请者会收到送养者联系电邮 `rehomerEmail`，以便自行联系；系统不会代发邮件。
-- `POST /api/applications`：输入 `{catId,name,email,experience,home,reason}`，返回 `{id}`。不能申请自己的猫咪或重复申请。home、reason 为选填；留空或省略时保存为空字符串，填写时分别最多 1000、1500 字符。
+- `POST /api/applications`：输入 `{catId,name,email,experience,home,reason,consent}`，返回 `{id}`。新申请必须提交布尔值 consent=true。不能申请自己的猫咪或重复申请。home、reason 为选填；留空或省略时保存为空字符串，填写时分别最多 1000、1500 字符。
 - `PUT /api/applications/:id`：输入联系与居住资料；仅申请人、待处理/沟通中、且猫咪开放时可编辑。
 - `PATCH /api/applications/:id/status`：输入 `{status}`。申请人可设 withdrawn；送养者可设 contacting、accepted、rejected、completed；服务器验证前后状态和权限。
 - `DELETE /api/applications/:id`：申请人删除 withdrawn/rejected/closed 记录；不可删除有效或完成记录。
@@ -42,6 +42,8 @@
 - `DELETE /api/stories/:id`：仅作者可删除；未被其他记录引用的照片也会清理。
 
 标题 1-90 字符，内容 15-5000 字符。public 为布尔值；image 可上传 data URL 或沿用该猫咪/当前日记的照片路径。
+
+日记独立上传的照片随日记共享范围控制读取；若使用猫咪资料页原有照片，该照片仍公开。
 
 ## 收藏与清单
 

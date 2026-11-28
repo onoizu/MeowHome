@@ -1,4 +1,20 @@
--- 默认不插入账号、猫咪、申请或日记。
--- 首次运行后通过网页注册和发布；不会自动恢复旧的 localStorage 示例。
--- 自动测试在临时数据库创建自己的记录，不影响使用中的数据库。
-SELECT 1;
+-- Demonstration records for an empty database. Loaded by npm run db:seed.
+INSERT INTO users (id, name, email, passwordHash) VALUES
+  ('demo-rehomer', 'Alex', 'rehomer@example.test', '6d84e774ec96c7fb3ec71040bd8b2520:0aed73fb1d0924b6501ae181f7da6251de30d4e10853be562d633de5c307acfaba7730d3eeddb5221a21ac62c104638d3ba06985be0841bec720f2283149f1b7'),
+  ('demo-adopter', 'Sam', 'adopter@example.test', 'eeca233122addd09741fc770865ace4a:3e22188e350d87e3d880012c63d63719f9dbb30db250f718a2b48d7c4d0dddfd16d16670ef6707d7afa58328ae598b6b0033140dcdfd40793d3d1651ddf9e9df');
+
+INSERT INTO cats (id, ownerId, adopterId, name, breed, months, gender, location, health, personality, energy, care, beginner, otherPets, description, requirements, image, status) VALUES
+  ('demo-mochi', 'demo-rehomer', NULL, 'Mochi', 'Domestic Shorthair', 8, 'Female', 'Kowloon', 'Please discuss care history with the rehomer.', 'Playful', 'active', 'easy', 1, 1, 'Chases feather toys and likes watching birds by the window.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/01-white-kitten.jpg', 'available'),
+  ('demo-luna', 'demo-rehomer', NULL, 'Luna', 'Mixed / Unknown', 10, 'Female', 'Hong Kong Island', 'Please discuss care history with the rehomer.', 'Playful', 'active', 'easy', 1, 0, 'Enjoys short games and settles down beside a familiar person.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/02-silver-kitten.jpg', 'available'),
+  ('demo-oreo', 'demo-rehomer', NULL, 'Oreo', 'Domestic Shorthair', 7, 'Male', 'New Territories', 'Please discuss care history with the rehomer.', 'Gentle', 'calm', 'easy', 1, 0, 'Takes time to warm up and likes a quiet corner for afternoon naps.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/03-black-white-kitten.jpg', 'available'),
+  ('demo-oliver', 'demo-rehomer', NULL, 'Oliver', 'Domestic Shorthair', 42, 'Male', 'Kowloon', 'Please discuss care history with the rehomer.', 'Independent', 'calm', 'easy', 0, 0, 'Enjoys company at a distance and likes a predictable routine.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/04-tabby-cat.jpg', 'available'),
+  ('demo-snowy', 'demo-rehomer', NULL, 'Snowy', 'Domestic Longhair', 84, 'Female', 'New Territories', 'Please discuss care history with the rehomer.', 'Gentle', 'calm', 'regular', 1, 0, 'Likes being brushed and resting beside a sunny window.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/06-white-cat.jpg', 'available'),
+  ('demo-ginger', 'demo-rehomer', NULL, 'Ginger', 'Domestic Shorthair', 24, 'Male', 'Hong Kong Island', 'Please discuss care history with the rehomer.', 'Playful', 'active', 'easy', 1, 0, 'Follows people around the flat and loves chasing a soft ball.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/07-orange-tabby.jpg', 'available'),
+  ('demo-coco', 'demo-rehomer', NULL, 'Coco', 'Ragdoll', 36, 'Female', 'Kowloon', 'Please discuss care history with the rehomer.', 'Gentle', 'calm', 'regular', 1, 1, 'Enjoys a quiet home with regular grooming and gentle play.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/09-ragdoll.jpg', 'available'),
+  ('demo-honey', 'demo-rehomer', 'demo-adopter', 'Honey', 'British Shorthair (Golden Shaded)', 30, 'Female', 'Hong Kong Island', 'Please discuss care history with the rehomer.', 'Independent', 'calm', 'easy', 0, 0, 'Likes high perches and chooses when to join people on the sofa.', 'An indoor home with secure windows and time for daily care.', 'assets/sample-cats/10-golden-shaded.jpg', 'adopted');
+
+INSERT INTO applications (id, catId, userId, name, email, experience, home, reason, status) VALUES
+  ('demo-handover', 'demo-honey', 'demo-adopter', 'Sam', 'adopter@example.test', 'Previously cared for a cat', 'A quiet indoor home.', '', 'completed');
+
+INSERT INTO diaries (id, userId, catId, title, text, image, public) VALUES
+  ('demo-diary', 'demo-adopter', 'demo-honey', 'Honey has settled in', 'Honey spent the morning exploring and found a favourite spot by the window.', 'assets/sample-cats/10-golden-shaded.jpg', 1);

@@ -68,6 +68,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const details = Object.fromEntries(new FormData(form));
     Object.keys(details).forEach((k) => (details[k] = details[k].trim()));
+    details.consent = form.elements.consent.checked;
     const submit = form.querySelector("[type=submit]");
     submit.disabled = true;
     const error = await MeowStore.apply(cat.id, details);

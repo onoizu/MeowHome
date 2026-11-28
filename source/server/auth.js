@@ -37,7 +37,7 @@ function createSession(db, req, res, userId) {
   res.cookie(cookieName, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: req.secure,
+    secure: req.secure || !!req.app.locals.publicOrigin?.startsWith("https://"),
     maxAge: duration,
     path: "/",
   });

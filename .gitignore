@@ -14,3 +14,4 @@ __pycache__/
 # 本地数据库和用户上传图片
 source/database/*.sqlite*
 source/database/uploads/
+/source/client/assets/images/default-avatar.png

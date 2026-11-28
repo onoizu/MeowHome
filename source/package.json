@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server/index.js",
     "db:init": "node --env-file-if-exists=.env database/init.js",
+    "db:seed": "node --env-file-if-exists=.env database/init.js --seed",
     "test": "node --test tests/api.test.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js"
   },

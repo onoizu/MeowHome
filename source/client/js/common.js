@@ -40,7 +40,7 @@ window.MeowUI = (() => {
     );
   }
   function safeImage(value) {
-    return /^(assets\/images\/[a-z0-9-]+\.jpg|\/uploads\/[a-f0-9-]+\.(?:jpg|png|webp)|data:image\/(?:jpeg|png|webp);base64,[a-zA-Z0-9+/=]+)$/.test(
+    return /^(assets\/(?:images|sample-cats)\/[a-z0-9-]+\.jpg|\/uploads\/[a-f0-9-]+\.(?:jpg|png|webp)|data:image\/(?:jpeg|png|webp);base64,[a-zA-Z0-9+/=]+)$/.test(
       value || "",
     )
       ? value

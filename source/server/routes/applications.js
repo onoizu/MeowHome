@@ -29,6 +29,7 @@ function applications(db) {
     res.json(rows);
   });
   router.post("/", (req, res) => {
+    if (req.body.consent !== true) V.fail("Please agree to share your application with the rehomer.");
     const input = V.applicationInput(req.body);
     const catId = V.text(req.body.catId, "Cat ID", 1, 80);
     const id = randomUUID();

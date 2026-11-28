@@ -12,7 +12,7 @@ MeowHome 是独立的学生项目，不代表 SPCA，不同步其实际领养数
 
 ## 示例照片
 
-照片下载为本地文件，用于首页及指南的配图；领养广场只显示用户自行发布的资料和上传照片。原有未使用照片保留在资源目录，不会自动生成猫咪档案。来源 Unsplash：
+照片下载为本地文件，用于首页及指南的配图；领养广场读取数据库中的待领养资料。原有未使用照片保留在资源目录，不会自动生成猫咪档案。来源 Unsplash：
 
 - `hero.jpg`：https://images.unsplash.com/photo-1495360010541-f48722b34f7d
 - `milo.jpg`：https://images.unsplash.com/photo-1573865526739-10659fec78a5
@@ -50,12 +50,12 @@ MeowHome 是独立的学生项目，不代表 SPCA，不同步其实际领养数
 
 ## 新增真实摄影素材（2026-11-02）
 
-10 张来自 Unsplash 摄影师原始页面的猫咪照片，存放在 `source/client/assets/sample-cats/`，用于手动上传练习发布及日记。最初 8 张发布于 2017–2019 年，后补布偶与金渐层照片发布于 2020、2025 年，未使用 AI 生成或改绘。摄影师、相机信息、原始链接和许可记录见 [照片来源说明](source/client/assets/sample-cats/SOURCES.md)。素材本身不会自动创建数据库记录；原开发电脑上另有通过正常发布流程建立的 10 条记录。
+10 张来自 Unsplash 摄影师原始页面的猫咪照片，存放在 `source/client/assets/sample-cats/`，用于手动上传练习发布及日记。最初 8 张发布于 2017–2019 年，后补布偶与金渐层照片发布于 2020、2025 年，未使用 AI 生成或改绘。摄影师、相机信息、原始链接和许可记录见 [照片来源说明](source/client/assets/sample-cats/SOURCES.md)。可选的演示数据引用这些照片。
 
 
 ## 默认头像
 
-`source/client/assets/images/default-avatar.png` 为用户提供的猫脸图片，保留原图与其中的 Depositphotos 水印，没有裁剪或去水印。界面现使用项目内原创矢量图 `source/client/assets/images/default-avatar.svg` 作为个人中心和送养者资料的默认头像；原 PNG 不再使用。
+个人中心和送养者资料使用项目内的矢量头像 `source/client/assets/images/default-avatar.svg`。
 
 
 ## 首页分区与动态效果参考

@@ -29,7 +29,8 @@ test("MeowHome complete adoption flow", async (t) => {
   function client() {
     let cookie = "";
     return async (url, method = "GET", body) => {
-      const res = await fetch(base + "/api" + url, {
+      const isImage = url.startsWith("/uploads/");
+      const res = await fetch(base + (isImage ? url : "/api" + url), {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +43,7 @@ test("MeowHome complete adoption flow", async (t) => {
         cookie = res.headers.get("set-cookie").split(";")[0];
       return {
         status: res.status,
-        data: await res.json(),
+        data: isImage ? await res.arrayBuffer() : await res.json(),
         cookie: res.headers.get("set-cookie"),
       };
     };
@@ -76,6 +77,7 @@ test("MeowHome complete adoption flow", async (t) => {
     image: photograph,
   };
   const details = {
+    consent: true,
     name: "Adopter",
     email: "adopter@example.test",
     experience: "First-time adopter",
@@ -288,6 +290,9 @@ test("MeowHome complete adoption flow", async (t) => {
         .status,
       400,
     );
+    for (const consent of [undefined, false, "true"]) {
+      assert.equal((await adopter("/applications", "POST", { catId, ...details, consent })).status, 400);
+    }
     const a = await adopter("/applications", "POST", { catId, ...details });
     assert.equal(a.status, 201);
     appId = a.data.id;
@@ -449,6 +454,16 @@ test("MeowHome complete adoption flow", async (t) => {
     storyId = a.data.id;
     const originalDiaryImage = (await adopter("/stories")).data[0].image;
     assert.equal(fs.existsSync(uploadedFile(originalDiaryImage)), true);
+    assert.equal((await adopter(originalDiaryImage)).status, 200);
+    assert.equal((await owner(originalDiaryImage)).status, 404);
+    assert.equal((await guest(originalDiaryImage)).status, 404);
+    for (const visible of [true, false]) {
+      const update = await adopter("/stories/" + storyId, "PUT", {
+        ...diary, image: originalDiaryImage, public: visible,
+      });
+      assert.equal(update.status, 200);
+      assert.equal((await guest(originalDiaryImage)).status, visible ? 200 : 404);
+    }
     assert.equal((await adopter("/stories")).data.length, 1);
     assert.deepEqual((await owner("/stories")).data, []);
     assert.deepEqual((await guest("/stories")).data, []);
@@ -472,6 +487,18 @@ test("MeowHome complete adoption flow", async (t) => {
     const catImage = (await guest("/cats/" + catId)).data.image;
     assert.equal(fs.existsSync(uploadedFile(catImage)), true);
     assert.equal((await guest("/stories")).data.length, 1);
+  });
+  await t.test("avatar upload, retention and reset", async () => {
+    const profile = { name: "Adopter", email: details.email };
+    const upload = await adopter("/profile", "PATCH", { ...profile, avatar: photograph });
+    assert.equal(upload.status, 200);
+    const avatar = upload.data.avatar;
+    assert.match(avatar, /^\/uploads\//);
+    assert.equal((await guest(avatar)).status, 200);
+    assert.equal((await adopter("/profile", "PATCH", profile)).data.avatar, avatar);
+    assert.equal((await adopter("/profile", "PATCH", { ...profile, avatar: null })).data.avatar, null);
+    assert.equal((await guest(avatar)).status, 404);
+    assert.equal(fs.existsSync(uploadedFile(avatar)), false);
   });
   await t.test(
     "profile CRUD, favourites, checklist and server security",
