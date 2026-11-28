@@ -52,9 +52,11 @@ MeowHome 是独立的学生项目，不代表 SPCA，不同步其实际领养数
 
 10 张来自 Unsplash 摄影师原始页面的猫咪照片，存放在 `source/client/assets/sample-cats/`，用于手动上传练习发布及日记。最初 8 张发布于 2017–2019 年，后补布偶与金渐层照片发布于 2020、2025 年，未使用 AI 生成或改绘。摄影师、相机信息、原始链接和许可记录见 [照片来源说明](source/client/assets/sample-cats/SOURCES.md)。素材本身不会自动创建数据库记录；原开发电脑上另有通过正常发布流程建立的 10 条记录。
 
+
 ## 默认头像
 
 `source/client/assets/images/default-avatar.png` 为用户提供的猫脸图片，保留原图与其中的 Depositphotos 水印，没有裁剪或去水印。界面现使用项目内原创矢量图 `source/client/assets/images/default-avatar.svg` 作为个人中心和送养者资料的默认头像；原 PNG 不再使用。
+
 
 ## 首页分区与动态效果参考
 
