@@ -52,6 +52,7 @@ To override them, copy `.env.example` to `.env` inside `source/` and edit the va
 - **Supporting tools:** database-backed favourites and a preparation checklist, static beginner care guides, and a five-question matching quiz with explained rule-based results.
 - **Interface:** English/Traditional Chinese switching, responsive navigation with dropdowns, a personal dashboard, and homepage scroll reveals, image movement and an interactive adoption-process section.
 
+
 ## Try a complete adoption
 
 1. Register account A. Open **Rehome a cat**, fill in the cat's information, upload a JPG/PNG/WebP photograph, preview and publish. The listing becomes available immediately.
